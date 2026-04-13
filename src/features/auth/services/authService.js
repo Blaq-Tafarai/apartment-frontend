@@ -15,11 +15,17 @@ export const authService = {
     return api.post('/api/v1/auth/forgot-password', { email });
   },
 
+  register: async (email, password) => {
+    return api.post('/api/v1/auth/register', { email, password });
+  },
+
+
+
   verifyOtp: async (otp) => {
     return api.post('/api/v1/auth/verify-otp', { otp });
   },
 
-  resetPassword: async (password) => {
+resetPassword: async (password) => {
     return api.post('/api/v1/auth/reset-password', { password });
   },
 

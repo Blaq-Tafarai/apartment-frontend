@@ -28,14 +28,18 @@ export const AuthProvider = ({ children }) => {
         // Try refresh using http-only cookie
         const refreshResponse = await authService.refresh().catch(() => null);
         
-        if (refreshResponse?.accessToken) {
-          accessTokenRef.current = refreshResponse.accessToken;
+        if (refreshResponse?.data?.accessToken) {
+          accessTokenRef.current = refreshResponse.data.accessToken;
         }
-        if (refreshResponse?.user) {
-          setUser(refreshResponse.user);
-          localStorage.setItem('userProfile', JSON.stringify(refreshResponse.user));
+        const userData = {
+          ...refreshResponse?.data?.user,
+          mustChangePassword: refreshResponse?.data?.mustChangePassword ?? false
+        };
+        if (userData) {
+          setUser(userData);
+          localStorage.setItem('userProfile', JSON.stringify(userData));
         }
-        setIsAuthenticated(!!accessTokenRef.current || !!refreshResponse?.user);
+        setIsAuthenticated(!!accessTokenRef.current || !!userData);
       } catch (error) {
         console.error('Auth init failed:', error);
         clearAuth();
@@ -54,20 +58,24 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
   };
 
-  const login = async (email, password) => {
+const login = async (email, password) => {
     try {
       setLoading(true);
       const response = await authService.login(email, password);
       
-      if (response.accessToken) {
-        accessTokenRef.current = response.accessToken;
+      if (response.data?.accessToken) {
+        accessTokenRef.current = response.data.accessToken;
       }
-      if (response.user) {
-        setUser(response.user);
-        localStorage.setItem('userProfile', JSON.stringify(response.user));
+      const userData = {
+        ...response.data?.user,
+        mustChangePassword: response.data?.mustChangePassword ?? false
+      };
+      if (userData) {
+        setUser(userData);
+        localStorage.setItem('userProfile', JSON.stringify(userData));
       }
       setIsAuthenticated(true);
-      return { success: true, user: response.user };
+      return { success: true, user: userData, mustChangePassword: response.data?.mustChangePassword ?? false };
     } catch (error) {
       const errorMsg = error.message || 'Login failed';
       return { success: false, error: errorMsg };
@@ -79,12 +87,16 @@ export const AuthProvider = ({ children }) => {
   const refreshToken = async () => {
     try {
       const response = await authService.refresh();
-      if (response.accessToken) {
-        accessTokenRef.current = response.accessToken;
+      if (response.data?.accessToken) {
+        accessTokenRef.current = response.data.accessToken;
       }
-      if (response.user) {
-        setUser(response.user);
-        localStorage.setItem('userProfile', JSON.stringify(response.user));
+      const userData = {
+        ...response.data?.user,
+        mustChangePassword: response.data?.mustChangePassword ?? false
+      };
+      if (userData) {
+        setUser(userData);
+        localStorage.setItem('userProfile', JSON.stringify(userData));
       }
       setIsAuthenticated(true);
       return { success: true };
@@ -105,13 +117,18 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateUser = (userData) => {
-    const updatedUser = { ...user, ...userData };
+    const updatedUser = { 
+      ...user, 
+      ...userData,
+      mustChangePassword: userData.mustChangePassword ?? user?.mustChangePassword 
+    };
     localStorage.setItem('userProfile', JSON.stringify(updatedUser));
     setUser(updatedUser);
   };
 
   const value = {
     user,
+    mustChangePassword: user?.mustChangePassword,
     isAuthenticated,
     loading,
     accessToken: getAccessToken,

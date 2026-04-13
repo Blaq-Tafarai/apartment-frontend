@@ -1,44 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, Building2, Palette } from 'lucide-react';
-import { useAuth } from '../../../context/AuthContext';
+import { ShieldCheck, Mail, Clock, Building2, Palette } from 'lucide-react';
+import { authService } from '../services/authService';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import { Drawer } from '../../../components/ui/Modal';
 import ThemeCustomizer from '../../../features/settings/components/ThemeCustomizer';
 
-const LoginPage = () => {
+const VerifyOtpPage = () => {
+  const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isThemeDrawerOpen, setIsThemeDrawerOpen] = useState(false);
   
-  const { login, user, mustChangePassword } = useAuth();
   const navigate = useNavigate();
+
+  // Try to prefill email from localStorage (set from forgot-password)
+  useEffect(() => {
+    const storedEmail = localStorage.getItem('resetEmail');
+    if (storedEmail) {
+      setEmail(storedEmail);
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setMessage('');
+
     setLoading(true);
 
-    const result = await login(email, password);
-    
-    if (result.success) {
-      
-      const user = result.user;
-      console.log('Logged in user:', user);
-      
-      if (user?.role === 'superadmin') {
-        navigate('/superadmin-dashboard');
-      } else {
-        navigate('/dashboard');
-      }
-    } else {
-      setError(result.error || 'Invalid credentials');
+    try {
+      await authService.verifyOtp(otp);
+      setMessage('OTP verified successfully! You can now reset your password.');
+      localStorage.setItem('otpVerified', 'true');
+      // Navigate after short delay
+      setTimeout(() => navigate('/reset-password'), 1500);
+    } catch (err) {
+      setError(err.message || 'Invalid OTP');
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (
@@ -65,11 +69,11 @@ const LoginPage = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4">
               <Building2 className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-text-primary">ApartHub</h1>
-            <p className="text-text-secondary mt-2">Sign in to your account</p>
+            <h1 className="text-3xl font-bold text-text-primary">Verify OTP</h1>
+            <p className="text-text-secondary mt-2">Enter the code sent to {email || 'your email'}</p>
           </div>
 
-          {/* Login Form */}
+          {/* Verify OTP Form */}
           <div className="card">
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
@@ -77,35 +81,32 @@ const LoginPage = () => {
                   {error}
                 </div>
               )}
+              {message && (
+                <div className="p-3 rounded-lg bg-success bg-opacity-10 border border-success text-success text-sm">
+                  {message}
+                </div>
+              )}
 
               <Input
-                label="Email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                icon={Mail}
+                label="OTP Code"
+                type="text"
+                placeholder="Enter 6-digit code"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                icon={ShieldCheck}
+                maxLength={6}
                 required
               />
 
-              <Input
-                label="Password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                icon={Lock}
-                required
-              />
-
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="rounded" />
-                  <span className="text-text-secondary">Remember me</span>
-                </label>
-                <Link to="/forgot-password" className="text-primary hover:underline">
-                  Forgot password?
-                </Link>
+              <div className="text-xs text-text-secondary text-center">
+                Didn't receive code?{' '}
+                <button 
+                  type="button"
+                  onClick={() => navigate('/forgot-password')}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Resend
+                </button>
               </div>
 
               <Button 
@@ -114,14 +115,13 @@ const LoginPage = () => {
                 className="w-full"
                 disabled={loading}
               >
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? 'Verifying...' : 'Verify OTP'}
               </Button>
             </form>
 
             <div className="mt-6 text-center text-sm text-text-secondary">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-primary font-medium hover:underline">
-                Sign up
+              <Link to="/login" className="text-primary font-medium hover:underline">
+                Back to Sign In
               </Link>
             </div>
           </div>
@@ -144,5 +144,5 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default VerifyOtpPage;
 

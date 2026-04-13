@@ -1,44 +1,36 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, Building2, Palette } from 'lucide-react';
-import { useAuth } from '../../../context/AuthContext';
+import { Mail, Building2, Palette } from 'lucide-react';
+import { authService } from '../services/authService';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import { Drawer } from '../../../components/ui/Modal';
 import ThemeCustomizer from '../../../features/settings/components/ThemeCustomizer';
 
-const LoginPage = () => {
+const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isThemeDrawerOpen, setIsThemeDrawerOpen] = useState(false);
   
-  const { login, user, mustChangePassword } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setMessage('');
+
     setLoading(true);
 
-    const result = await login(email, password);
-    
-    if (result.success) {
-      
-      const user = result.user;
-      console.log('Logged in user:', user);
-      
-      if (user?.role === 'superadmin') {
-        navigate('/superadmin-dashboard');
-      } else {
-        navigate('/dashboard');
-      }
-    } else {
-      setError(result.error || 'Invalid credentials');
+    try {
+      await authService.forgotPassword(email);
+      setMessage('Password reset link sent to your email. Check your inbox.');
+    } catch (err) {
+      setError(err.message || 'Failed to send reset email');
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (
@@ -65,16 +57,21 @@ const LoginPage = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4">
               <Building2 className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-text-primary">ApartHub</h1>
-            <p className="text-text-secondary mt-2">Sign in to your account</p>
+            <h1 className="text-3xl font-bold text-text-primary">Forgot Password</h1>
+            <p className="text-text-secondary mt-2">Enter your email to reset password</p>
           </div>
 
-          {/* Login Form */}
+          {/* Forgot Password Form */}
           <div className="card">
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <div className="p-3 rounded-lg bg-danger bg-opacity-10 border border-danger text-danger text-sm">
                   {error}
+                </div>
+              )}
+              {message && (
+                <div className="p-3 rounded-lg bg-success bg-opacity-10 border border-success text-success text-sm">
+                  {message}
                 </div>
               )}
 
@@ -88,40 +85,19 @@ const LoginPage = () => {
                 required
               />
 
-              <Input
-                label="Password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                icon={Lock}
-                required
-              />
-
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="rounded" />
-                  <span className="text-text-secondary">Remember me</span>
-                </label>
-                <Link to="/forgot-password" className="text-primary hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
-
               <Button 
                 type="submit" 
                 variant="primary" 
                 className="w-full"
                 disabled={loading}
               >
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? 'Sending...' : 'Send Reset Link'}
               </Button>
             </form>
 
             <div className="mt-6 text-center text-sm text-text-secondary">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-primary font-medium hover:underline">
-                Sign up
+              <Link to="/login" className="text-primary font-medium hover:underline">
+                Back to Sign In
               </Link>
             </div>
           </div>
@@ -144,5 +120,5 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default ForgotPasswordPage;
 

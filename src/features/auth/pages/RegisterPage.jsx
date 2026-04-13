@@ -1,44 +1,46 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, Building2, Palette } from 'lucide-react';
-import { useAuth } from '../../../context/AuthContext';
+import { Mail, Lock, User, Building2, Palette, ShieldCheck } from 'lucide-react';
+import { authService } from '../services/authService';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import { Drawer } from '../../../components/ui/Modal';
 import ThemeCustomizer from '../../../features/settings/components/ThemeCustomizer';
 
-const LoginPage = () => {
+const RegisterPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isThemeDrawerOpen, setIsThemeDrawerOpen] = useState(false);
   
-  const { login, user, mustChangePassword } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
     setLoading(true);
 
-    const result = await login(email, password);
-    
-    if (result.success) {
+    try {
+      const result = await authService.register(email, password);
       
-      const user = result.user;
-      console.log('Logged in user:', user);
-      
-      if (user?.role === 'superadmin') {
-        navigate('/superadmin-dashboard');
+      if (result.success || result.user) {
+        navigate('/login', { state: { message: 'Registration successful! Please log in.' } });
       } else {
-        navigate('/dashboard');
+        setError(result.error || 'Registration failed');
       }
-    } else {
-      setError(result.error || 'Invalid credentials');
+    } catch (err) {
+      setError(err.message || 'Registration failed');
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (
@@ -66,10 +68,10 @@ const LoginPage = () => {
               <Building2 className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-text-primary">ApartHub</h1>
-            <p className="text-text-secondary mt-2">Sign in to your account</p>
+            <p className="text-text-secondary mt-2">Create your account</p>
           </div>
 
-          {/* Login Form */}
+          {/* Register Form */}
           <div className="card">
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
@@ -98,15 +100,15 @@ const LoginPage = () => {
                 required
               />
 
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="rounded" />
-                  <span className="text-text-secondary">Remember me</span>
-                </label>
-                <Link to="/forgot-password" className="text-primary hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
+              <Input
+                label="Confirm Password"
+                type="password"
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                icon={ShieldCheck}
+                required
+              />
 
               <Button 
                 type="submit" 
@@ -114,14 +116,14 @@ const LoginPage = () => {
                 className="w-full"
                 disabled={loading}
               >
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? 'Creating account...' : 'Sign Up'}
               </Button>
             </form>
 
             <div className="mt-6 text-center text-sm text-text-secondary">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-primary font-medium hover:underline">
-                Sign up
+              Already have an account?{' '}
+              <Link to="/login" className="text-primary font-medium hover:underline">
+                Sign in
               </Link>
             </div>
           </div>
@@ -144,5 +146,5 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default RegisterPage;
 

@@ -1,44 +1,44 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, Building2, Palette } from 'lucide-react';
-import { useAuth } from '../../../context/AuthContext';
+import { Lock, ShieldCheck, Building2, Palette } from 'lucide-react';
+import { authService } from '../services/authService';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import { Drawer } from '../../../components/ui/Modal';
 import ThemeCustomizer from '../../../features/settings/components/ThemeCustomizer';
 
-const LoginPage = () => {
-  const [email, setEmail] = useState('');
+const ResetPasswordPage = () => {
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isThemeDrawerOpen, setIsThemeDrawerOpen] = useState(false);
   
-  const { login, user, mustChangePassword } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setMessage('');
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
     setLoading(true);
 
-    const result = await login(email, password);
-    
-    if (result.success) {
-      
-      const user = result.user;
-      console.log('Logged in user:', user);
-      
-      if (user?.role === 'superadmin') {
-        navigate('/superadmin-dashboard');
-      } else {
-        navigate('/dashboard');
-      }
-    } else {
-      setError(result.error || 'Invalid credentials');
+    try {
+      await authService.resetPassword(password);
+      setMessage('Password reset successfully! You can now log in.');
+      // Navigate after short delay
+      setTimeout(() => navigate('/login'), 1500);
+    } catch (err) {
+      setError(err.message || 'Failed to reset password');
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (
@@ -65,11 +65,11 @@ const LoginPage = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-4">
               <Building2 className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-text-primary">ApartHub</h1>
-            <p className="text-text-secondary mt-2">Sign in to your account</p>
+            <h1 className="text-3xl font-bold text-text-primary">Reset Password</h1>
+            <p className="text-text-secondary mt-2">Enter your new password</p>
           </div>
 
-          {/* Login Form */}
+          {/* Reset Password Form */}
           <div className="card">
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
@@ -77,36 +77,31 @@ const LoginPage = () => {
                   {error}
                 </div>
               )}
+              {message && (
+                <div className="p-3 rounded-lg bg-success bg-opacity-10 border border-success text-success text-sm">
+                  {message}
+                </div>
+              )}
 
               <Input
-                label="Email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                icon={Mail}
-                required
-              />
-
-              <Input
-                label="Password"
+                label="New Password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="Enter new password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 icon={Lock}
                 required
               />
 
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="rounded" />
-                  <span className="text-text-secondary">Remember me</span>
-                </label>
-                <Link to="/forgot-password" className="text-primary hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
+              <Input
+                label="Confirm New Password"
+                type="password"
+                placeholder="Confirm new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                icon={ShieldCheck}
+                required
+              />
 
               <Button 
                 type="submit" 
@@ -114,14 +109,13 @@ const LoginPage = () => {
                 className="w-full"
                 disabled={loading}
               >
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? 'Resetting...' : 'Reset Password'}
               </Button>
             </form>
 
             <div className="mt-6 text-center text-sm text-text-secondary">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-primary font-medium hover:underline">
-                Sign up
+              <Link to="/login" className="text-primary font-medium hover:underline">
+                Back to Sign In
               </Link>
             </div>
           </div>
@@ -144,5 +138,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
-
+export default ResetPasswordPage;
