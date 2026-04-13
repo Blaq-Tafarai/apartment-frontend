@@ -1,3 +1,5 @@
+import { useAuth } from '../context/AuthContext';
+
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 
@@ -15,66 +17,92 @@ const handleResponse = async (response) => {
 }
 
 // ----------------------------------
-// Base fetch wrapper with cookies
+// Base fetch wrapper with auth
 // ----------------------------------
 
-const baseFetch = async (endpoint, options = {}) => {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    credentials: 'include', // <-- SEND COOKIES
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-  })
+export const createApiClient = (getAccessToken) => ({
+  get: async (endpoint) => {
+    const token = getAccessToken ? getAccessToken() : null;
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'GET',
+      credentials: 'include', // Always send cookies (refresh token)
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+    return handleResponse(response);
+  },
 
-  return handleResponse(response)
-}
+  post: async (endpoint, data) => {
+    const token = getAccessToken ? getAccessToken() : null;
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+  },
 
-// ----------------------------------
-// Methods
-// ----------------------------------
+  put: async (endpoint, data) => {
+    const token = getAccessToken ? getAccessToken() : null;
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+  },
 
-export const get = (endpoint) =>
-  baseFetch(endpoint, { method: 'GET' })
+  patch: async (endpoint, data) => {
+    const token = getAccessToken ? getAccessToken() : null;
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+  },
 
-export const post = (endpoint, data) =>
-  baseFetch(endpoint, {
-    method: 'POST',
-    body: JSON.stringify(data),
-  })
+  delete: async (endpoint) => {
+    const token = getAccessToken ? getAccessToken() : null;
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+    return handleResponse(response);
+  },
 
-export const put = (endpoint, data) =>
-  baseFetch(endpoint, {
-    method: 'PUT',
-    body: JSON.stringify(data),
-  })
+  upload: async (endpoint, formData) => {
+    const token = getAccessToken ? getAccessToken() : null;
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+      headers,
+    });
+    return handleResponse(response);
+  },
+});
 
-export const patch = (endpoint, data) =>
-  baseFetch(endpoint, {
-    method: 'PATCH',
-    body: JSON.stringify(data),
-  })
+// Default instance (can pass getAccessToken from context)
+export const api = createApiClient(null);
+export default api;
 
-export const del = (endpoint) =>
-  baseFetch(endpoint, { method: 'DELETE' })
-
-// ----------------------------------
-// Upload (no content-type header)
-// ----------------------------------
-
-export const upload = (endpoint, formData) =>
-  fetch(`${API_BASE_URL}${endpoint}`, {
-    method: 'POST',
-    body: formData,
-    credentials: 'include',
-  }).then(handleResponse)
-
-export default {
-  get,
-  post,
-  put,
-  patch,
-  delete: del,
-  upload,
-}

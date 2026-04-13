@@ -25,15 +25,14 @@ const LoginPage = () => {
     const result = await login(email, password);
     
     if (result.success) {
-      const user = result.user || JSON.parse(localStorage.getItem('user'));
+      // User already set in context
+      const user = result.user;
       
-
       if (user?.role === 'superadmin') {
         navigate('/superadmin-dashboard');
       } else {
         navigate('/dashboard');
       }
-
     } else {
       setError(result.error || 'Invalid credentials');
     }
@@ -123,43 +122,6 @@ const LoginPage = () => {
               <Link to="/register" className="text-primary font-medium hover:underline">
                 Sign up
               </Link>
-            </div>
-          </div>
-
-          {/* Demo Credentials */}
-          <div className="mt-4 p-4 bg-surface rounded-lg border border-border-color">
-            <p className="text-xs text-text-secondary text-center mb-3">
-              Quick Login (Demo):
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button 
-                type="button"
-                onClick={() => { setEmail('superadmin@example.com'); setPassword('demo'); }}
-                className="text-xs px-2 py-1.5 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors"
-              >
-                Superadmin
-              </button>
-              <button 
-                type="button"
-                onClick={() => { setEmail('admin@example.com'); setPassword('demo'); }}
-                className="text-xs px-2 py-1.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
-              >
-                Admin
-              </button>
-              <button 
-                type="button"
-                onClick={() => { setEmail('manager@example.com'); setPassword('demo'); }}
-                className="text-xs px-2 py-1.5 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
-              >
-                Manager
-              </button>
-              <button 
-                type="button"
-                onClick={() => { setEmail('tenant@example.com'); setPassword('demo'); }}
-                className="text-xs px-2 py-1.5 bg-orange-100 text-orange-700 rounded hover:bg-orange-200 transition-colors"
-              >
-                Tenant
-              </button>
             </div>
           </div>
         </div>
