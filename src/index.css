@@ -1,0 +1,338 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lato:wght@300;400;700&family=Roboto:wght@300;400;500;700&family=Playfair+Display:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* =========================================================
+     Solarized Light (Polarized Light)
+  ========================================================= */
+
+  /* Primary Theme Colors */
+  --primary: 38 139 210;       /* solarized blue */
+  --primary-dark: 42 161 152;  /* cyan */
+  --secondary: 108 113 196;    /* violet */
+  --accent: 181 137 0;         /* yellow */
+
+  --success: 133 153 0;        /* green */
+  --danger: 220 50 47;         /* red */
+  --warning: 203 75 22;        /* orange */
+  --info: 38 139 210;          /* blue */
+
+  /* Backgrounds */
+  --background: 253 246 227;       /* base3 */
+  --surface: 238 232 213;          /* base2 */
+  --surface-variant: 221 218 199;  /* custom soft layer */
+
+  /* Text */
+  --text-primary: 88 110 117;      /* base01 */
+  --text-secondary: 101 123 131;   /* base00 */
+  --text-tertiary: 131 148 150;    /* base0 */
+
+  /* Borders */
+  --border: 211 201 181;
+  --border-hover: 190 182 162;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.12), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.12), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* Layout */
+  --sidebar-width: 16rem;
+  --header-height: 4rem;
+  --border-radius: 0.5rem;
+  --transition: 0.3s ease;
+
+  /* Font */
+  --font-family: 'Inter', sans-serif;
+}
+
+/* =========================================================
+   Solarized Dark (Polarized Dark)
+========================================================= */
+
+[data-theme="dark"] {
+
+  --primary: 38 139 210;
+  --primary-dark: 42 161 152;
+  --secondary: 108 113 196;
+  --accent: 181 137 0;
+
+  --success: 133 153 0;
+  --danger: 220 50 47;
+  --warning: 203 75 22;
+  --info: 38 139 210;
+
+  /* Backgrounds */
+  --background: 0 43 54;       /* base03 */
+  --surface: 7 54 66;          /* base02 */
+  --surface-variant: 17 69 82;
+
+  /* Text */
+  --text-primary: 238 232 213; /* base2 */
+  --text-secondary: 147 161 161; /* base1 */
+  --text-tertiary: 131 148 150;  /* base0 */
+
+  /* Borders */
+  --border: 88 110 117;
+  --border-hover: 101 123 131;
+}
+
+/* =========================================================
+   Color Themes (Accent Overrides)
+========================================================= */
+
+[data-color="yellow"] {
+  --primary: 181 137 0;
+  --primary-dark: 146 109 0;
+  --accent: 203 75 22;
+}
+
+[data-color="red"] {
+  --primary: 220 50 47;
+  --primary-dark: 180 40 40;
+  --accent: 203 75 22;
+}
+
+[data-color="green"] {
+  --primary: 133 153 0;
+  --primary-dark: 101 123 0;
+  --accent: 42 161 152;
+}
+
+[data-color="blue"] {
+  --primary: 38 139 210;
+  --primary-dark: 0 95 160;
+  --accent: 42 161 152;
+}
+
+[data-color="purple"] {
+  --primary: 108 113 196;
+  --primary-dark: 85 90 170;
+  --accent: 147 161 161;
+}
+
+[data-color="pink"] {
+  --primary: 211 54 130;
+  --primary-dark: 180 40 110;
+  --accent: 220 50 47;
+}
+
+[data-color="indigo"] {
+  --primary: 75 94 196;
+  --primary-dark: 60 70 160;
+  --accent: 108 113 196;
+}
+
+/* =========================================================
+   Font Families
+========================================================= */
+
+[data-font="inter"] {
+  --font-family: 'Inter', sans-serif;
+}
+
+[data-font="lato"] {
+  --font-family: 'Lato', sans-serif;
+}
+
+[data-font="roboto"] {
+  --font-family: 'Roboto', sans-serif;
+}
+
+[data-font="playfair"] {
+  --font-family: 'Playfair Display', serif;
+}
+
+[data-font="spacemono"] {
+  --font-family: 'Space Mono', monospace;
+}
+
+/* =========================================================
+   Layout Styles
+========================================================= */
+
+[data-layout="bordered"] {
+  --border-width: 1px;
+}
+
+[data-layout="bordered"] .card,
+[data-layout="bordered"] .surface {
+  border: var(--border-width) solid rgb(var(--border));
+}
+
+[data-layout="shadow"] .card,
+[data-layout="shadow"] .surface {
+  box-shadow: var(--shadow-md);
+  border: none;
+}
+
+[data-layout="skin"] .card,
+[data-layout="skin"] .surface {
+  background: linear-gradient(
+    135deg,
+    rgb(var(--surface)) 0%,
+    rgb(var(--surface-variant)) 100%
+  );
+}
+
+/* Sidebar Layouts */
+
+[data-sidebar="horizontal"] {
+  --sidebar-width: 100%;
+}
+
+/* =========================================================
+   Base Styles
+========================================================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: rgb(var(--background));
+  color: rgb(var(--text-primary));
+  transition: background-color var(--transition), color var(--transition);
+  line-height: 1.6;
+}
+
+/* =========================================================
+   Scrollbars
+========================================================= */
+
+::-webkit-scrollbar {
+  width: 2px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(var(--surface));
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--border));
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--border-hover));
+}
+
+/* =========================================================
+   Utility Classes
+========================================================= */
+
+.bg-primary {
+  background-color: rgb(var(--primary));
+}
+
+.bg-surface {
+  background-color: rgb(var(--surface));
+}
+
+.bg-background {
+  background-color: rgb(var(--background));
+}
+
+.text-primary {
+  color: rgb(var(--text-primary));
+}
+
+.text-secondary {
+  color: rgb(var(--text-secondary));
+}
+
+.border-color {
+  border-color: rgb(var(--border));
+}
+
+.card {
+  background-color: rgb(var(--surface));
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  transition: all var(--transition);
+}
+
+/* =========================================================
+   Buttons
+========================================================= */
+
+.btn {
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  transition: all var(--transition);
+  cursor: pointer;
+  border: none;
+  font-family: var(--font-family);
+}
+
+.btn-primary {
+  background-color: rgb(var(--primary));
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: rgb(var(--primary-dark));
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* =========================================================
+   Animations
+========================================================= */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%,100% {
+    opacity:1;
+  }
+  50% {
+    opacity:0.5;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4,0,0.6,1) infinite;
+}
+
+/* =========================================================
+   Transitions
+========================================================= */
+
+.transition-all {
+  transition: all var(--transition);
+}
