@@ -60,9 +60,9 @@ const ProtectedRoute = ({ children, roles, permissions, requireAll = false }) =>
   }
 
   // Check mustChangePassword
-  if (user?.mustChangePassword !== true) {
-    return <Navigate to="/reset-password" replace />;
-  }
+  // if (user?.mustChangePassword !== true) {
+  //   return <Navigate to="/reset-password" replace />;
+  // }
 
   // If roles or permissions are specified, use RoleGuard
   if (roles || permissions) {
@@ -120,6 +120,7 @@ function App() {
                       <Route path="/verify-otp" element={<VerifyOtpPage />} />
                       <Route path="/reset-password" element={<ResetPasswordPage />} />
                       <Route path="*" element={<NotFoundPage />} />
+
                     </Route>
 
                     {/* Protected Routes */}

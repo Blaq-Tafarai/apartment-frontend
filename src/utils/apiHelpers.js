@@ -1,5 +1,3 @@
-import { useAuth } from '../context/AuthContext';
-
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 
@@ -21,88 +19,107 @@ const handleResponse = async (response) => {
 // ----------------------------------
 
 export const createApiClient = (getAccessToken) => ({
-  get: async (endpoint) => {
+
+  get: async (endpoint, customHeaders = {}) => {
     const token = getAccessToken ? getAccessToken() : null;
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'GET',
-      credentials: 'include', // Always send cookies (refresh token)
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...(token && { Authorization: `Bearer ${token}` }),
+        ...customHeaders,
       },
     });
+
     return handleResponse(response);
   },
 
-  post: async (endpoint, data) => {
+  post: async (endpoint, data, customHeaders = {}) => {
     const token = getAccessToken ? getAccessToken() : null;
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...(token && { Authorization: `Bearer ${token}` }),
+        ...customHeaders,
       },
       body: JSON.stringify(data),
     });
+
     return handleResponse(response);
   },
 
-  put: async (endpoint, data) => {
+  put: async (endpoint, data, customHeaders = {}) => {
     const token = getAccessToken ? getAccessToken() : null;
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'PUT',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...(token && { Authorization: `Bearer ${token}` }),
+        ...customHeaders,
       },
       body: JSON.stringify(data),
     });
+
     return handleResponse(response);
   },
 
-  patch: async (endpoint, data) => {
+  patch: async (endpoint, data, customHeaders = {}) => {
     const token = getAccessToken ? getAccessToken() : null;
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'PATCH',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...(token && { Authorization: `Bearer ${token}` }),
+        ...customHeaders,
       },
       body: JSON.stringify(data),
     });
+
     return handleResponse(response);
   },
 
-  delete: async (endpoint) => {
+  delete: async (endpoint, customHeaders = {}) => {
     const token = getAccessToken ? getAccessToken() : null;
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'DELETE',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...(token && { Authorization: `Bearer ${token}` }),
+        ...customHeaders,
       },
     });
+
     return handleResponse(response);
   },
 
-  upload: async (endpoint, formData) => {
+  upload: async (endpoint, formData, customHeaders = {}) => {
     const token = getAccessToken ? getAccessToken() : null;
-    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
       body: formData,
       credentials: 'include',
-      headers,
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...customHeaders,
+      },
     });
+
     return handleResponse(response);
   },
 });
 
-// Default instance (can pass getAccessToken from context)
+// Default instance
 export const api = createApiClient(null);
 export default api;
-

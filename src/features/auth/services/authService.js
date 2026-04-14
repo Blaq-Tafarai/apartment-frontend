@@ -1,13 +1,12 @@
-import api from '../../../utils/apiHelpers';
+import api, { createApiClient } from '../../../utils/apiHelpers';
 
 export const authService = {
+
   login: async (email, password) => {
-    // Auth endpoints use cookies only, no Bearer
     return api.post('/api/v1/auth/login', { email, password });
   },
 
   refresh: async () => {
-    // Public refresh using http-only cookie only
     return api.post('/api/v1/auth/refresh');
   },
 
@@ -19,22 +18,34 @@ export const authService = {
     return api.post('/api/v1/auth/register', { email, password });
   },
 
-
-
-  verifyOtp: async (otp) => {
-    return api.post('/api/v1/auth/verify-otp', { otp });
+  verifyOtp: async (email, otp) => {
+    return api.post('/api/v1/auth/verify-otp', { email, otp });
   },
-
-resetPassword: async (password) => {
-    return api.post('/api/v1/auth/reset-password', { password });
+  
+  resetPassword: async ({ newPassword, token }) => {
+    return api.post(
+      '/api/v1/auth/reset-password',
+      { newPassword },
+      {
+        Authorization: `Bearer ${token}`
+      }
+    );
   },
 
   logout: async () => {
     return api.post('/api/v1/auth/logout');
   },
 
-  getMe: async () => {
-    return api.get('/api/v1/auth/me');
+  getMe: async (getAccessToken) => {
+    const protectedApi = createApiClient(getAccessToken);
+    return protectedApi.get('/api/v1/auth/me');
+  },
+
+  changePassword: async (currentPassword, newPassword, getAccessToken) => {
+    const protectedApi = createApiClient(getAccessToken);
+    return protectedApi.put('/api/v1/auth/change-password', {
+      currentPassword,
+      newPassword
+    });
   }
 };
-

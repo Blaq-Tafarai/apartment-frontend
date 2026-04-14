@@ -13,21 +13,27 @@ const ForgotPasswordPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isThemeDrawerOpen, setIsThemeDrawerOpen] = useState(false);
-  
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setMessage('');
-
     setLoading(true);
 
     try {
       await authService.forgotPassword(email);
-      setMessage('Password reset link sent to your email. Check your inbox.');
+
+      setMessage('OTP sent to your email');
+
+      // ✅ pass email via navigation (NO localStorage)
+      setTimeout(() => {
+        navigate('/verify-otp', { state: { email } });
+      }, 1000);
+
     } catch (err) {
-      setError(err.message || 'Failed to send reset email');
+      setError(err.message || 'Failed to send OTP');
     } finally {
       setLoading(false);
     }

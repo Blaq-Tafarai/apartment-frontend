@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { ShieldCheck, Mail, Clock, Building2, Palette } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { ShieldCheck, Mail, Building2, Palette } from 'lucide-react';
 import { authService } from '../services/authService';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
@@ -9,35 +9,43 @@ import ThemeCustomizer from '../../../features/settings/components/ThemeCustomiz
 
 const VerifyOtpPage = () => {
   const [otp, setOtp] = useState('');
-  const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isThemeDrawerOpen, setIsThemeDrawerOpen] = useState(false);
   
-  const navigate = useNavigate();
+    const navigate = useNavigate();
+  const location = useLocation();
 
-  // Try to prefill email from localStorage (set from forgot-password)
-  useEffect(() => {
-    const storedEmail = localStorage.getItem('resetEmail');
-    if (storedEmail) {
-      setEmail(storedEmail);
-    }
-  }, []);
+  // get email from previous page
+  const email = location.state?.email;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!email) {
+      setError('Session expired. Please start again.');
+      return;
+    }
+
     setError('');
     setMessage('');
-
     setLoading(true);
 
     try {
-      await authService.verifyOtp(otp);
-      setMessage('OTP verified successfully! You can now reset your password.');
-      localStorage.setItem('otpVerified', 'true');
-      // Navigate after short delay
-      setTimeout(() => navigate('/reset-password'), 1500);
+      const res = await authService.verifyOtp(email, otp);
+
+      const resetToken = res.data.resetToken;
+
+      setMessage('OTP verified');
+
+      // ✅ pass resetToken forward
+      setTimeout(() => {
+        navigate('/reset-password', {
+          state: { resetToken }
+        });
+      }, 1000);
+
     } catch (err) {
       setError(err.message || 'Invalid OTP');
     } finally {
@@ -70,7 +78,6 @@ const VerifyOtpPage = () => {
               <Building2 className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-text-primary">Verify OTP</h1>
-            <p className="text-text-secondary mt-2">Enter the code sent to {email || 'your email'}</p>
           </div>
 
           {/* Verify OTP Form */}

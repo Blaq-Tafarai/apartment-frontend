@@ -14,7 +14,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [isThemeDrawerOpen, setIsThemeDrawerOpen] = useState(false);
   
-  const { login, user, mustChangePassword } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -27,7 +27,6 @@ const LoginPage = () => {
     if (result.success) {
       
       const user = result.user;
-      console.log('Logged in user:', user);
       
       if (user?.role === 'superadmin') {
         navigate('/superadmin-dashboard');

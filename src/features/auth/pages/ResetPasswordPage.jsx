@@ -1,39 +1,55 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Lock, ShieldCheck, Building2, Palette } from 'lucide-react';
 import { authService } from '../services/authService';
+import { Lock, ShieldCheck, Building2, Palette } from 'lucide-react';
 import Input from '../../../components/ui/Input';
 import Button from '../../../components/ui/Button';
 import { Drawer } from '../../../components/ui/Modal';
 import ThemeCustomizer from '../../../features/settings/components/ThemeCustomizer';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+
 
 const ResetPasswordPage = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [isThemeDrawerOpen, setIsThemeDrawerOpen] = useState(false);
-  
+
+
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // get resetToken from navigation
+  const resetToken = location.state?.resetToken;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setMessage('');
+
+    if (!resetToken) {
+      setError('Session expired. Please restart the process.');
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
+    setError('');
+    setMessage('');
     setLoading(true);
 
     try {
-      await authService.resetPassword(password);
-      setMessage('Password reset successfully! You can now log in.');
-      // Navigate after short delay
+      await authService.resetPassword({
+        newPassword: password,
+        token: resetToken
+      });
+
+      setMessage('Password reset successful');
+
       setTimeout(() => navigate('/login'), 1500);
+
     } catch (err) {
       setError(err.message || 'Failed to reset password');
     } finally {
