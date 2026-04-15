@@ -3,26 +3,26 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Input from "../../../components/ui/Input";
 import Select from "../../../components/ui/Select";
 import TextArea from "../../../components/ui/TextArea";
-import Button from "../../../components/ui/Button";
 import {
     Building,
     Mail,
-    Phone,
-    MapPin,
-    User,
+    Phone
 } from "lucide-react";
 
 import { companySchema } from "../validation/company.schema";
 
-const CompanyForm = ({ defaultValues, onSubmit, modalMode }) => {
+const CompanyForm = ({ defaultValues, onSubmit }) => {
     const {
         register,
         control,
         handleSubmit,
-        formState: { errors, isSubmitting },
+        formState: { errors },
     } = useForm({
         resolver: zodResolver(companySchema),
-        defaultValues,
+        defaultValues: {
+            ...defaultValues,
+            address: defaultValues?.address ?? ''
+        },
     });
 
     return (
@@ -52,29 +52,9 @@ const CompanyForm = ({ defaultValues, onSubmit, modalMode }) => {
                     placeholder="e.g., +1-555-0123"
                 />
 
-                {/* Admin User Select - assuming users are passed as prop or fetched */}
-                <Controller
-                    name="adminUserId"
-                    control={control}
-                    render={({ field }) => (
-                        <Select
-                            label="Admin User"
-                            value={field.value}
-                            searchable
-                            onChange={field.onChange}
-                            options={[
-                                { value: '1', label: 'John Admin' },
-                                { value: '2', label: 'Jane Manager' },
-                                { value: '3', label: 'Bob Analyst' },
-                            ]}
-                            error={errors.adminUserId?.message}
-                            placeholder="Select an admin user"
-                        />
-                    )}
-                />
-
                 {/* Status Select */}
                 <Controller
+                    key={`status-${errors.status ? 'error' : 'valid'}`}
                     name="status"
                     control={control}
                     render={({ field }) => (
@@ -85,6 +65,7 @@ const CompanyForm = ({ defaultValues, onSubmit, modalMode }) => {
                             options={[
                                 { value: 'active', label: 'Active' },
                                 { value: 'inactive', label: 'Inactive' },
+                                { value: 'suspended', label: 'Suspended' },
                             ]}
                             error={errors.status?.message}
                         />
@@ -92,13 +73,13 @@ const CompanyForm = ({ defaultValues, onSubmit, modalMode }) => {
                 />
             </div>
 
-            <TextArea
-                label="Address"
-                {...register("address")}
-                error={errors.address?.message}
-                rows={3}
-                placeholder="Enter the company address..."
-            />
+                <TextArea
+                    label="Address"
+                    {...register("address")}
+                    error={errors.address?.message}
+                    rows={3}
+                    placeholder="Enter the company address..."
+                />
         </form>
     );
 };

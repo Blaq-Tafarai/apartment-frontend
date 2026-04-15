@@ -221,7 +221,7 @@ const statusColors = (status) => {
         footer={
           <>
             <Button
-              variant="default"
+              variant="danger"
               onClick={() => setIsFormModalOpen(false)}
             >
               Cancel

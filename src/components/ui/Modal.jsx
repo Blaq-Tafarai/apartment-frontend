@@ -140,10 +140,10 @@ const Modal = React.forwardRef(({
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border-color flex-shrink-0">
+          <div className="flex items-center justify-end gap-3 px-6 py-4 flex-shrink-0 bg-background">
             {footer}
           </div>
-        )}
+        )} 
       </div>
     </div>
   );

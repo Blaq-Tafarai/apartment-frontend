@@ -20,21 +20,27 @@ const handleResponse = async (response) => {
 
 export const createApiClient = (getAccessToken) => ({
 
-  get: async (endpoint, customHeaders = {}) => {
-    const token = getAccessToken ? getAccessToken() : null;
+  get: async (endpoint, params = {}, customHeaders = {}) => {
+  const token = getAccessToken ? getAccessToken() : null;
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...customHeaders,
-      },
-    });
+  // ✅ Build query string
+  const queryString = new URLSearchParams(params).toString();
+  const url = queryString
+    ? `${API_BASE_URL}${endpoint}?${queryString}`
+    : `${API_BASE_URL}${endpoint}`;
 
-    return handleResponse(response);
-  },
+  const response = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...customHeaders, // ✅ only real headers now
+    },
+  });
+
+  return handleResponse(response);
+},
 
   post: async (endpoint, data, customHeaders = {}) => {
     const token = getAccessToken ? getAccessToken() : null;

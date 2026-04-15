@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, X } from 'lucide-react';
+import { AlertCircle, AlertTriangleIcon, Eye, EyeOff, X } from 'lucide-react';
 
 const sizes = {
   sm: 'px-3 py-1.5 text-sm',
@@ -177,7 +177,12 @@ const Input = React.forwardRef(({
 
       {/* Error */}
       {error && (
-        <p id={errorId} className="mt-1 text-sm text-danger">{error}</p>
+        <div className="mt-1 flex items-center">
+          <span>
+            <AlertCircle className="w-4 h-4 inline-block mr-1 text-danger" />
+          </span>
+          <p id={errorId} className="mt-1 text-sm text-danger">{error}</p>
+        </div>
       )}
     </div>
   );
