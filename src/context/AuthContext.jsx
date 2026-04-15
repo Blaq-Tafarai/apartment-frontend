@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { queryClient } from '../queryClient';
 import { authService } from '../features/auth/services/authService';
 
 const AuthContext = createContext();
@@ -14,6 +15,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const accessTokenRef = useRef(null);
+  const logoutInProgressRef = useRef(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -22,7 +24,12 @@ export const AuthProvider = ({ children }) => {
 
   // Initialize auth state
   useEffect(() => {
-    const initAuth = async () => {
+const initAuth = async () => {
+      if (logoutInProgressRef.current) {
+        console.log('Skipping auth init due to logout in progress');
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         // Try refresh using http-only cookie
@@ -106,13 +113,18 @@ const login = async (email, password) => {
     }
   };
 
-  const logout = async () => {
+const logout = async () => {
+    logoutInProgressRef.current = true;
     try {
       await authService.logout();
     } catch (error) {
       console.error('Logout API failed:', error);
     } finally {
+      // Invalidate all queries
+      queryClient.clear();
+      queryClient.invalidateQueries();
       clearAuth();
+      logoutInProgressRef.current = false;
     }
   };
 

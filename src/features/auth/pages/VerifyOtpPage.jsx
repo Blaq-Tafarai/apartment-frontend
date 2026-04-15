@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ShieldCheck, Mail, Building2, Palette } from 'lucide-react';
 import { authService } from '../services/authService';
@@ -13,12 +13,68 @@ const VerifyOtpPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isThemeDrawerOpen, setIsThemeDrawerOpen] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
+  const [canResend, setCanResend] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
   
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const location = useLocation();
+  const intervalRef = useRef(null);
 
   // get email from previous page
   const email = location.state?.email;
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleResend = async () => {
+    if (!email) {
+      setError('Session expired. Please start again.');
+      return;
+    }
+
+    setResendLoading(true);
+    setResendMessage('');
+    setError('');
+
+    try {
+      await authService.forgotPassword(email);
+      setResendMessage('OTP resent successfully');
+      setOtp('');
+      setTimeLeft(300);
+      setCanResend(false);
+    } catch (err) {
+      setError(err.message || 'Failed to resend OTP');
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  // Countdown timer
+  useEffect(() => {
+    if (canResend || timeLeft === 0) return;
+
+    intervalRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          setCanResend(true);
+          clearInterval(intervalRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [canResend, timeLeft]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,7 +95,7 @@ const VerifyOtpPage = () => {
 
       setMessage('OTP verified');
 
-      // ✅ pass resetToken forward
+      // pass resetToken forward
       setTimeout(() => {
         navigate('/reset-password', {
           state: { resetToken }
@@ -94,6 +150,12 @@ const VerifyOtpPage = () => {
                 </div>
               )}
 
+              {resendMessage && (
+                  <div className="p-2 rounded bg-success bg-opacity-10 border border-success text-success text-xs">
+                    {resendMessage}
+                  </div>
+                )}
+
               <Input
                 label="OTP Code"
                 type="text"
@@ -105,14 +167,20 @@ const VerifyOtpPage = () => {
                 required
               />
 
-              <div className="text-xs text-text-secondary text-center">
-                Didn't receive code?{' '}
+              <div className="text-xs text-text-secondary text-center space-y-1">
+                Didn't receive code? 
+                {!canResend && timeLeft > 0 && (
+                  <div className="text-sm text-text-secondary">
+                    Resend available in <span className="font-mono text-primary">{formatTime(timeLeft)}</span>
+                  </div>
+                )}
                 <button 
                   type="button"
-                  onClick={() => navigate('/forgot-password')}
-                  className="text-primary hover:underline font-medium"
+                  onClick={handleResend}
+                  disabled={!canResend || resendLoading || timeLeft > 0}
+                  className="text-primary hover:underline font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline"
                 >
-                  Resend
+                  {resendLoading ? 'Resending...' : 'Resend'}
                 </button>
               </div>
 

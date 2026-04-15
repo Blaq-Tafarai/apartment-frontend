@@ -43,7 +43,7 @@ const ListSystemAuditLogs = lazy(() => import('./features/superadmin/pages/ListS
 // Protected Route
 // --------------------
 const ProtectedRoute = ({ children, roles, permissions, requireAll = false }) => {
-  const { isAuthenticated, loading, user } = useAuth();
+  const { isAuthenticated, loading, user, accessToken } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -55,7 +55,7 @@ const ProtectedRoute = ({ children, roles, permissions, requireAll = false }) =>
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !accessToken()) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
