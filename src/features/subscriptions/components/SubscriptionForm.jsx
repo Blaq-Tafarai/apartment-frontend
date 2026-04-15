@@ -99,6 +99,25 @@ const SubscriptionForm = ({ defaultValues, onSubmit, modalMode }) => {
                         />
                     )}
                 />
+
+                <Controller
+                    name="status"
+                    control={control}
+                    render={({ field }) => (
+                        <Select
+                            label="Status"
+                            value={field.value || ''}
+                            onChange={(value) => field.onChange(value || '')}
+                            options={[
+                                { value: 'active', label: 'Active' },
+                                { value: 'inactive', label: 'Inactive' },
+                                { value: 'cancelled', label: 'Cancelled' },
+                                { value: 'expired', label: 'Expired' },
+                            ]}
+                            error={errors.status?.message}
+                        />
+                    )}
+                />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

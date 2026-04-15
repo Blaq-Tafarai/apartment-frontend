@@ -41,7 +41,7 @@ organizationId: z
     .refine((val) => /^\d{4}-\d{2}-\d{2}$/.test(val || ''), {
       message: 'Invalid end date format',
     }),
-    status: z.enum(['active', 'inactive', 'suspended'], {
+    status: z.enum(['active', 'inactive', 'cancelled', 'expired'], {
       message: 'Status is required',
     }).optional(),
   });
