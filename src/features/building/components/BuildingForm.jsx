@@ -3,7 +3,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Input, { NumberInput } from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 import TextArea from '../../../components/ui/TextArea';
-import Button from '../../../components/ui/Button';
 import {
   Building,
   LocateIcon,
@@ -11,6 +10,7 @@ import {
   Timer,
   UnfoldVerticalIcon,
 } from 'lucide-react';
+import React from 'react';
 
 import { buildingSchema } from '../validation/building.schema';
 
@@ -18,15 +18,22 @@ const BuildingForm = ({ defaultValues, onSubmit, modalMode }) => {
   const {
     register,
     control,
+    reset,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm({
     resolver: zodResolver(buildingSchema),
-    defaultValues,
+    defaultValues: defaultValues || {},
   });
+
+  // Reset form when defaultValues change
+  React.useEffect(() => {
+    reset(defaultValues || {});
+  }, [defaultValues, reset]);
 
   return (
     <form
+      id="building-form"
       onSubmit={handleSubmit(onSubmit)}
       className="space-y-4"
     >
@@ -47,15 +54,22 @@ const BuildingForm = ({ defaultValues, onSubmit, modalMode }) => {
           placeholder="e.g., 123 Main St, City, State"
         />
 
-        <NumberInput
-          label="Units"
-          {...register('units', { valueAsNumber: true })}
-          error={errors.units?.message}
-          min={1}
-          max={120}
-          step={1}
-          leftIcon={<UnfoldVerticalIcon className="w-4 h-4" />}
-          placeholder="e.g., 10"
+        <Controller
+          name="units"
+          control={control}
+          render={({ field }) => (
+            <NumberInput
+              label="Units"
+              value={field.value || ''}
+              onChange={(e) => field.onChange(e.target?.value ? Number(e.target.value) : null)}
+              error={errors.units?.message}
+              min={1}
+              max={120}
+              step={1}
+              leftIcon={<UnfoldVerticalIcon className="w-4 h-4" />}
+              placeholder="e.g., 10"
+            />
+          )}
         />
 
         {/* Custom Select → Controller */}
@@ -68,56 +82,68 @@ const BuildingForm = ({ defaultValues, onSubmit, modalMode }) => {
               value={field.value}
               onChange={field.onChange}
               options={[
-                { value: 'Active', label: 'Active' },
-                { value: 'Inactive', label: 'Inactive' },
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' },
                 {
-                  value: 'Under Construction',
+                  value: 'under_construction',
                   label: 'Under Construction',
                 },
-                { value: 'Maintenance', label: 'Maintenance' },
+                { value: 'maintenance', label: 'Maintenance' },
               ]}
               error={errors.status?.message}
             />
           )}
         />
 
-        <NumberInput
-          label="Year Built"
-          {...register('yearBuilt', { valueAsNumber: true })}
-          error={errors.yearBuilt?.message}
-          min={1800}
-          max={new Date().getFullYear()}
-          leftIcon={<Timer className="w-4 h-4" />}
-          placeholder="e.g., 1990"
+        <Controller
+          name="yearBuilt"
+          control={control}
+          render={({ field }) => (
+            <NumberInput
+              label="Year Built"
+              value={field.value || ''}
+              onChange={(e) => field.onChange(e.target?.value ? Number(e.target.value) : null)}
+              error={errors.yearBuilt?.message}
+              min={1800}
+              max={new Date().getFullYear()}
+              leftIcon={<Timer className="w-4 h-4" />}
+              placeholder="e.g., 1990"
+            />
+          )}
         />
 
-        <NumberInput
-          label="Total Sqft"
-          {...register('totalSqft', { valueAsNumber: true })}
-          error={errors.totalSqft?.message}
-          min={100}
-          step={50}
-          leftIcon={<Stamp className="w-4 h-4" />}
-          placeholder="e.g., 1500"
+        <Controller
+          name="totalSqft"
+          control={control}
+          render={({ field }) => (
+            <NumberInput
+              label="Total Sqft"
+              value={field.value || ''}
+              onChange={(e) => field.onChange(e.target?.value ? Number(e.target.value) : null)}
+              error={errors.totalSqft?.message}
+              min={100}
+              step={50}
+              leftIcon={<Stamp className="w-4 h-4" />}
+              placeholder="e.g., 1500"
+            />
+          )}
         />
       </div>
 
-      <TextArea
-        label="Description"
-        {...register('description')}
-        error={errors.description?.message}
-        rows={3}
-        placeholder="Enter a description..."
+      <Controller
+        name="description"
+        control={control}
+        render={({ field }) => (
+          <TextArea
+            label="Description"
+            value={field.value || ''}
+            onChange={field.onChange}
+            error={errors.description?.message}
+            rows={3}
+            placeholder="Enter a description..."
+          />
+        )}
       />
-
-      <div className="pt-4 flex justify-end">
-        <Button
-          disabled={isSubmitting}
-          type="submit"
-        >
-          {isSubmitting ? 'Saving...' : modalMode === 'edit' ? 'Update Building' : 'Create Building'}
-        </Button>
-      </div>
     </form>
   );
 };

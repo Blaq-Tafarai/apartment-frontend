@@ -52,6 +52,7 @@ const ListBuildings = () => {
   };
 
   const handleFormSubmit = async (formData) => {
+    console.log('Form submitted with data:', formData);
     try {
       if (modalMode === 'add') {
         await createBuildingMutation.mutateAsync(formData);
@@ -95,11 +96,11 @@ const ListBuildings = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Active':
+      case 'active':
         return 'success';
-      case 'Inactive':
+      case 'inactive':
         return 'danger';
-      case 'Under Construction':
+      case 'under_construction':
         return 'info';
       default:
         return 'warning';
@@ -116,14 +117,15 @@ const ListBuildings = () => {
       header: 'Status',
       accessor: 'status',
       render: row => (
-        <Badge color={getStatusColor(row.status)} variant="soft" dot>
+        <Badge className="capitalize" color={getStatusColor(row.status)} variant="soft" dot>
           {row.status}
         </Badge>
       ),
     },
+    { header: 'Apartments', accessor: '_count.apartments', render: row => row._count?.apartments || 0 },
     { header: 'Year Built', accessor: 'yearBuilt' },
     { header: 'Total Sqft', accessor: 'totalSqft', render: row => row.totalSqft ? `${row.totalSqft.toLocaleString()} sqft` : 'N/A' },
-    { header: 'Manager', accessor: 'manager', render: row => row.manager ? row.manager.name : 'N/A' },
+    { header: 'Manager', accessor: 'managers?.manager?.name', render: row => row.managers[0]?.manager?.name || 'N/A' },
     {
       header: 'Actions',
       render: row => (
@@ -224,12 +226,23 @@ const ListBuildings = () => {
         onClose={() => setIsFormModalOpen(false)}
         title={modalMode === 'add' ? 'Add New Building' : 'Edit Building'}
         size="2xl"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setIsFormModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit" form="building-form">
+              {modalMode === 'add' ? 'Create' : 'Update'}
+            </Button>
+          </>
+        }
       >
         <BuildingForm
           defaultValues= {modalMode === 'edit' ? currentBuilding : {}}
           onSubmit={handleFormSubmit}
           modalMode={modalMode}
         />
+
       </Modal>
 
       {/* View Building Modal */}
