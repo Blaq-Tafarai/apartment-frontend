@@ -34,11 +34,10 @@ const NotFoundPage = lazy(() => import('./features/notfound/NotFoundPage'));
 
 // Superadmin pages
 const SuperadminDashboard = lazy(() => import('./features/superadmin/pages/SuperadminDashboard'));
-const ListAllUsers = lazy(() => import('./features/superadmin/pages/ListAllUsers'));
-// const ListSubscriptions = lazy(() => import('./features/superadmin/pages/ListSubscriptions'));
 const PlatformSettings = lazy(() => import('./features/superadmin/pages/PlatformSettings'));
 const ListSystemAuditLogs = lazy(() => import('./features/superadmin/pages/ListSystemAuditLogs'));
 const ListSubscriptions = lazy(() => import('./features/subscriptions/pages/ListSubscriptions'));
+const ListUsers = lazy(() => import('./features/users/pages/ListUsers'));
 
 // --------------------
 // Protected Route
@@ -257,7 +256,7 @@ function App() {
                           path="users"
                           element={
                             <ProtectedRoute roles={['superadmin']}>
-                              <ListAllUsers />
+                              <ListUsers />
 
                             </ProtectedRoute>
                           }
