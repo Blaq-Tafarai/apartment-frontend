@@ -85,7 +85,7 @@ const Badge = ({
       className={`
         inline-flex items-center gap-1 font-medium
         ${sizes[size]}
-        ${colors[color][variant]}
+        ${colors[color]?.[variant] || 'bg-primary text-white'}
         ${pill ? 'rounded-full' : 'rounded'}
         ${uppercase ? 'uppercase' : ''}
         ${className}
