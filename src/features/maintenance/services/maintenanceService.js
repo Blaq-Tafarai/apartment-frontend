@@ -1,92 +1,29 @@
 import api from '../../../utils/apiHelpers';
-import { mockMaintenance } from '../mocks/maintenance.mock';
-
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
-
-const simulateDelay = () =>
-  new Promise(resolve => setTimeout(resolve, 300));
 
 export const maintenanceService = {
-  async getAll( { page = 1, limit = 10, search = '' } = {}) {
-    if (USE_MOCK) {
-      await simulateDelay();
-
-      let filtered = mockMaintenance;
-
-        if (search) {
-          filtered = filtered.filter(m =>
-            [
-              m.name,
-              m.description,
-              m.building?.name,
-              m.apartment?.number,
-            ]
-              .join(' ')
-              .toLowerCase()
-              .includes(search.toLowerCase())
-          )
-        }
-
-        const totalItems = filtered.length;
-        const totalPages = Math.ceil(totalItems / limit);
-
-        const start = (page - 1) * limit;
-        const data = filtered.slice(start, start + limit);
-
-        return {
-          data,
-          totalItems,
-          totalPages,
-          currentPage: page,
-          itemsPerPage: limit,
-        };
-    }
-
-    return api.get('/maintenances', {
-      page,
-      limit,
-      search,
-    });
+  // Get all maintenance requests with optional filtering
+  async getAll(params = {}) {
+    return api.get('/api/v1/maintenances', params);
   },
 
-  getById(id) {
-    if (USE_MOCK) {
-      return Promise.resolve(
-        mockMaintenance.find(m => m.id === id)
-      );
-    }
-
-    return api.get(`/maintenances/${id}`);
+  // Get maintenance request by ID
+  async getById(id) {
+    return api.get(`/api/v1/maintenances/${id}`);
   },
 
-  create(payload) {
-    if (USE_MOCK) {
-      const newMaintenance = {
-        id: Date.now(),
-        ...payload,
-      };
-      return Promise.resolve(newMaintenance);
-    }
-
-    return api.post('/maintenances', payload);
+  // Create new maintenance request
+  async create(maintenanceData) {
+    return api.post('/api/v1/maintenances', maintenanceData);
   },
 
-  update(id, payload) {
-    if (USE_MOCK) {
-      return Promise.resolve({
-        id,
-        ...payload,
-      });
-    }
-
-    return api.put(`/maintenances/${id}`, payload);
+  // Update maintenance request
+  async update(id, data) {
+    return api.put(`/api/v1/maintenances/${id}`, data);
   },
 
-  delete(id) {
-    if (USE_MOCK) {
-      return Promise.resolve({ success: true });
-    }
-
-    return api.delete(`/maintenances/${id}`);
+  // Delete maintenance request
+  async delete(id) {
+    return api.delete(`/api/v1/maintenances/${id}`);
   },
-}
+};
+

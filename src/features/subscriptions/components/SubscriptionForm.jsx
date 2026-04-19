@@ -63,6 +63,7 @@ const SubscriptionForm = ({ defaultValues, onSubmit, modalMode }) => {
                     {...register("planName")}
                     error={errors.planName?.message}
                     placeholder="e.g., Professional"
+                    leftIcon={<Building2 className="w-4 h-4" />}
                 />
 
                 <Controller

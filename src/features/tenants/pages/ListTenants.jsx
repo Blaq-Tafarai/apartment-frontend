@@ -107,9 +107,9 @@ const ListTenants = () => {
 
   const statusColors = (status) => {
     switch (status) {
-      case "Active":
+      case "active":
         return "success";
-      case "Inactive":
+      case "inactive":
         return "danger";
       default:
         return "warning";
@@ -134,25 +134,20 @@ const ListTenants = () => {
       render: (row) => row.user?.phone || 'N/A',
     },
     {
-      header: "Building",
-      accessor: "building.name",
-      render: (row) => row.building?.name || 'N/A',
-    },
-    {
       header: "Apartment",
-      accessor: "apartment.number",
-      render: (row) => row.apartment?.number || 'N/A',
+      accessor: "apartment.unitNumber",
+      render: (row) => row.apartment?.unitNumber || 'N/A',
     },
     {
       header: "Status",
       accessor: "status",
       render: (row) => (
         <Badge
-          color={statusColors(row.status)}
+          color={statusColors(row.user.status)}
           variant="soft"
           dot
         >
-          {row.status}
+          {row.user.status}
         </Badge>
       ),
     },
@@ -253,7 +248,7 @@ const ListTenants = () => {
           isOpen={isFormModalOpen}
           onClose={() => setIsFormModalOpen(false)}
           title={modalMode === "add" ? "Add Tenant" : "Edit Tenant"}
-          size="2xl"
+          size="3xl"
           footer={
             <>
               <Button

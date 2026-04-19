@@ -64,7 +64,7 @@ const ListMaintenance = () => {
         await createMaintenanceMutation.mutateAsync(formData);
         toast.success('Maintenance request created successfully');
       } else if (modalMode === 'edit') {
-        await updateMaintenanceMutation.mutateAsync({ id: currentMaintenance.id, ...formData });
+        await updateMaintenanceMutation.mutateAsync({ id: currentMaintenance.id, payload: formData });
         toast.success('Maintenance request updated successfully');
       }
       setIsFormModalOpen(false);
@@ -94,45 +94,28 @@ const ListMaintenance = () => {
   const maintenance = useMemo(() => data?.data || [], [data]);
   
 
-  const getStatus = (status) => {
+  const getStatusColor = (status) => {
     switch (status) {
-      case 'OPEN':
-        return 'Open';
-      case 'IN_PROGRESS':
-        return 'In Progress';
-      case 'COMPLETED':
-        return 'Completed';
-      case 'CANCELLED':
-        return 'Cancelled';
-      default:
-        return 'Unknown';
-    }
-  }
-
-  const priorityColors = (priority) => {
-    switch (priority) {
-      case 'URGENT':
-        return 'danger';
-      case 'HIGH':
+      case 'open':
         return 'warning';
-      case 'MEDIUM':
-        return 'warning';
-      case 'LOW':
+      case 'in_progress':
+        return 'info';
+      case 'completed':
+        return 'success';
+      case 'resolved':
         return 'success';
       default:
         return 'gray';
     }
-  }
+  };
 
-  const statusColors = (status) => {
-    switch (status) {
-      case 'OPEN':
-        return 'warning';
-      case 'IN_PROGRESS':
-        return 'info';
-      case 'COMPLETED':
+  const priorityColors = (priority) => {
+    switch (priority) {
+      case 'low':
         return 'success';
-      case 'CANCELLED':
+      case 'medium':
+        return 'warning';
+      case 'high':
         return 'danger';
       default:
         return 'gray';
@@ -141,11 +124,9 @@ const ListMaintenance = () => {
 
   // Columns definition
   const columns = [
-    { header: 'Tenant', accessor: 'tenant.name', render: row => row.tenant?.name || 'N/A' },
-    { header: 'Building', accessor: 'building', render: row => row.building?.name || 'N/A' },
-    { header: 'Apartment', accessor: 'apartment', render: row => row.apartment?.number || 'N/A' },
+    { header: 'Tenant', accessor: 'tenant.name', render: row => row.tenant?.user?.name || 'N/A' },
+    { header: 'Apartment', accessor: 'apartment', render: row => row.apartment?.unitNumber || 'N/A' },
     { header: 'Category', accessor: 'category' },
-    { header: 'Issue', accessor: 'issue' },
     {
       header: 'Priority',
       accessor: 'priority',
@@ -164,18 +145,15 @@ const ListMaintenance = () => {
       accessor: 'status',
       render: (row) => (
         <Badge
-          color={statusColors(row.status)}
+          color={getStatusColor(row.status)}
           variant="soft"
           dot
         >
-          {getStatus(row.status)}
+          {row.status}
         </Badge>
       ),
     },
-    { header: 'Assigned To', accessor: 'assignedTo' },
-    { header: 'Est. Cost', accessor: 'estimatedCost', render: row => row.estimatedCost ? `$${row.estimatedCost}` : 'N/A' },
-    { header: 'Actual Cost', accessor: 'actualCost', render: row => row.actualCost ? `$${row.actualCost}` : 'N/A' },
-    { header: 'Completed At', accessor: 'completedAt', render: row => row.completedAt ? new Date(row.completedAt).toLocaleDateString() : 'N/A' },
+    { header: 'Assigned To', accessor: 'assignedManager', render: row => row.assignedManager?.name || 'N/A' },
     {
       header: 'Actions',
       render: (row) => (
@@ -306,8 +284,7 @@ const ListMaintenance = () => {
         <MaintenanceDetailsView
           maintenance={currentMaintenance}
           priorityColors={priorityColors}
-          statusColors={statusColors}
-          getStatus={getStatus}
+          getStatusColor={getStatusColor}
           onClose={() => setIsViewModalOpen(false)}
         />
       </Modal>

@@ -1,53 +1,81 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { maintenanceService } from '../services/maintenanceService'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { createApiClient } from '../../../utils/apiHelpers';
+import { useAuth } from '../../../context/AuthContext';
 
-export const useMaintenance = params =>
-  useQuery({
-    queryKey: ['maintenance', params],
-    queryFn: () => maintenanceService.getAll(params),
+const ENDPOINTS = {
+  list: '/api/v1/maintenances',
+  single: (id) => `/api/v1/maintenances/${id}`,
+  create: '/api/v1/maintenances',
+  update: (id) => `/api/v1/maintenances/${id}`,
+  delete: (id) => `/api/v1/maintenances/${id}`,
+};
+
+export const useMaintenances = (params = {}) => {
+  const { accessToken: getAccessToken } = useAuth();
+  const apiClient = createApiClient(getAccessToken);
+
+  return useQuery({
+    queryKey: ['maintenances', params],
+    queryFn: () => apiClient.get(ENDPOINTS.list, params),
     keepPreviousData: true,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
-  })
+  });
+};
 
-export const useMaintenanceItem = id =>
-  useQuery({
-    queryKey: ['maintenance', id],
-    queryFn: () => maintenanceService.getById(id),
-    keepPreviousData: true,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 5 * 60 * 1000, // 5 minutes
+export const useMaintenance = (id) => {
+  const { accessToken: getAccessToken } = useAuth();
+  const apiClient = createApiClient(getAccessToken);
+
+  return useQuery({
+    queryKey: ['maintenances', id],
+    queryFn: () => apiClient.get(ENDPOINTS.single(id)),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
-  })
+  });
+};
 
 export const useCreateMaintenance = () => {
-  const qc = useQueryClient()
+  const { accessToken: getAccessToken } = useAuth();
+  const apiClient = createApiClient(getAccessToken);
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: maintenanceService.create,
-    onSuccess: () => qc.invalidateQueries(['maintenance']),
-  })
-}
+    mutationFn: (data) => apiClient.post(ENDPOINTS.create, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['maintenances'] });
+    },
+  });
+};
 
 export const useUpdateMaintenance = () => {
-  const qc = useQueryClient()
+  const { accessToken: getAccessToken } = useAuth();
+  const apiClient = createApiClient(getAccessToken);
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, payload }) => maintenanceService.update(id, payload),
-    onSuccess: () => qc.invalidateQueries(['maintenance']),
-  })
-}
+    mutationFn: ({ id, payload }) => apiClient.put(ENDPOINTS.update(id), payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['maintenances'] });
+    },
+  });
+};
 
 export const useDeleteMaintenance = () => {
-  const qc = useQueryClient()
+  const { accessToken: getAccessToken } = useAuth();
+  const apiClient = createApiClient(getAccessToken);
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: maintenanceService.delete,
+    mutationFn: (id) => apiClient.delete(ENDPOINTS.delete(id)),
     onSuccess: () => {
-      qc.invalidateQueries(['maintenance']) 
-},
-  })
-}
+      queryClient.invalidateQueries({ queryKey: ['maintenances'] });
+    },
+  });
+};
+
