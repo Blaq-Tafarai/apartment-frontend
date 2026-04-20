@@ -25,38 +25,38 @@ export const AuthProvider = ({ children }) => {
   // Initialize auth state
   useEffect(() => {
 const initAuth = async () => {
-      if (logoutInProgressRef.current) {
-        console.log('Skipping auth init due to logout in progress');
-        setLoading(false);
-        return;
+    if (logoutInProgressRef.current) {
+      console.log('Skipping auth init due to logout in progress');
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      // Try refresh using http-only cookie
+      const refreshResponse = await authService.refresh().catch(() => null);
+      
+      if (refreshResponse?.data?.accessToken) {
+        accessTokenRef.current = refreshResponse.data.accessToken;
       }
-      try {
-        setLoading(true);
-        // Try refresh using http-only cookie
-        const refreshResponse = await authService.refresh().catch(() => null);
-        
-        if (refreshResponse?.data?.accessToken) {
-          accessTokenRef.current = refreshResponse.data.accessToken;
-        }
-        const userData = {
-          ...refreshResponse?.data?.user,
-          mustChangePassword: refreshResponse?.data?.mustChangePassword ?? false
-        };
-        if (userData) {
-          setUser(userData);
-          localStorage.setItem('userProfile', JSON.stringify(userData));
-        }
-        setIsAuthenticated(!!accessTokenRef.current || !!userData);
-      } catch (error) {
-        console.error('Auth init failed:', error);
-        clearAuth();
-      } finally {
-        setLoading(false);
+      const userData = {
+        ...refreshResponse?.data?.user,
+        mustChangePassword: refreshResponse?.data?.mustChangePassword ?? false
+      };
+      if (userData) {
+        setUser(userData);
+        localStorage.setItem('userProfile', JSON.stringify(userData));
       }
-    };
+      setIsAuthenticated(!!accessTokenRef.current || !!userData);
+    } catch (error) {
+      console.error('Auth init failed:', error);
+      clearAuth();
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    initAuth();
-  }, []);
+  initAuth();
+}, []);
 
   const clearAuth = () => {
     accessTokenRef.current = null;

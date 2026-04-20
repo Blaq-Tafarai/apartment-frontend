@@ -3,7 +3,7 @@ import { Plus, Eye, PlusIcon, Trash2, Edit } from 'lucide-react';
 import Button, { IconButton } from '../../../components/ui/Button';
 import Table from '../../../components/ui/Table';
 import Input from '../../../components/ui/Input'
-import { useMaintenance } from '../hooks/useMaintenance';
+import { useMaintenance, useMaintenances } from '../hooks/useMaintenance';
 import useDebounce from '../../../hooks/useDebounce';
 import Pagination from '../../../components/ui/Pagination';
 import Badge from '../../../components/ui/Badge';
@@ -85,7 +85,7 @@ const ListMaintenance = () => {
 
 
   // Fetch maintenance via React Query
-  const { data, isLoading, isError } = useMaintenance({
+  const { data, isLoading, isError } = useMaintenances({
     page,
     limit,
     search: debouncedSearch,
