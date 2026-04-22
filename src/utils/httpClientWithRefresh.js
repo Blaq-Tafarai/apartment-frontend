@@ -1,61 +1,91 @@
-let isRefreshing = false
-let pendingRequests = []
+// httpClientWithRefresh.js
+
+import { authService } from '../features/auth/services/authService.js';
+
+let isRefreshing = false;
+let pendingRequests = [];
+let refreshFailedThisSession = false;
+let isInitialized = false;
 
 const processQueue = (error) => {
-  pendingRequests.forEach(p => p.reject(error))
-  pendingRequests = []
-}
+  pendingRequests.forEach(p => p.reject(error));
+  pendingRequests = [];
+};
 
 const retryQueue = () => {
-  pendingRequests.forEach(p => p.resolve())
-  pendingRequests = []
-}
+  pendingRequests.forEach(p => p.resolve());
+  pendingRequests = [];
+};
 
-const baseFetch = async (endpoint, options = {}) => {
-  try {
-    const response = await fetch(endpoint, {
-      ...options,
-      credentials: 'include',
-    })
+const isRecentlyLoggedOut = () => {
+  const loggedOutAt = localStorage.getItem('loggedOutAt');
+  return loggedOutAt && Date.now() - parseInt(loggedOutAt) < 5 * 60 * 1000;
+};
 
-    if (response.status === 401) {
-      if (!isRefreshing) {
-        isRefreshing = true
-
-        try {
-          await fetch('/api/auth/refresh', {
-            method: 'POST',
-            credentials: 'include',
-          })
-
-          isRefreshing = false
-          retryQueue()
-
-          return fetch(endpoint, {
-            ...options,
-            credentials: 'include',
-          })
-        } catch (err) {
-          isRefreshing = false
-          processQueue(err)
-          throw err
-        }
-      }
-
-      return new Promise((resolve, reject) => {
-        pendingRequests.push({
-          resolve: () =>
-            fetch(endpoint, {
-              ...options,
-              credentials: 'include',
-            }).then(resolve),
-          reject,
-        })
-      })
-    }
-
-    return response
-  } catch (err) {
-    throw err
+const redirectToLogin = () => {
+  if (!window.location.pathname.includes('/login')) {
+    window.location.href = '/login';
   }
-}
+};
+
+export const setInitialized = () => {
+  isInitialized = true;
+};
+
+export const resetRefreshState = () => {
+  refreshFailedThisSession = false;
+  isRefreshing = false;
+  isInitialized = true;
+  pendingRequests = [];
+};
+
+export const baseFetch = async (endpoint, options = {}) => {
+  const response = await window.fetch(endpoint, {
+    ...options,
+    credentials: 'include',
+  });
+
+  if (response.status !== 401) {
+    return response;
+  }
+
+  // ✅ Don't attempt refresh while initAuth is still running
+  // initAuth handles its own refresh — let it finish first
+  if (!isInitialized) {
+    return response;
+  }
+
+  if (refreshFailedThisSession) {
+    redirectToLogin();
+    return response;
+  }
+
+  if (isRecentlyLoggedOut()) {
+    redirectToLogin();
+    return response;
+  }
+
+  if (isRefreshing) {
+    return new Promise((resolve, reject) => {
+      pendingRequests.push({
+        resolve: () => baseFetch(endpoint, options).then(resolve).catch(reject),
+        reject,
+      });
+    });
+  }
+
+  isRefreshing = true;
+
+  try {
+    await authService.refresh();
+    isRefreshing = false;
+    retryQueue();
+    return baseFetch(endpoint, options);
+  } catch (refreshError) {
+    isRefreshing = false;
+    refreshFailedThisSession = true;
+    processQueue(refreshError);
+    redirectToLogin();
+    return response;
+  }
+};

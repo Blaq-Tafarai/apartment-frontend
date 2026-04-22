@@ -1,51 +1,41 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+import { baseFetch } from './httpClientWithRefresh.js';
 
-// ----------------------------------
-// Handle HTTP responses
-// ----------------------------------
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const handleResponse = async (response) => {
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}))
-    throw new Error(error.message || 'Request failed')
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || 'Request failed');
   }
-
-  return response.json()
-}
-
-// ----------------------------------
-// Base fetch wrapper with auth
-// ----------------------------------
+  return response.json();
+};
 
 export const createApiClient = (getAccessToken) => ({
 
   get: async (endpoint, params = {}, customHeaders = {}) => {
-  const token = getAccessToken ? getAccessToken() : null;
+    const token = getAccessToken ? getAccessToken() : null;
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString
+      ? `${API_BASE_URL}${endpoint}?${queryString}`
+      : `${API_BASE_URL}${endpoint}`;
 
-  // ✅ Build query string
-  const queryString = new URLSearchParams(params).toString();
-  const url = queryString
-    ? `${API_BASE_URL}${endpoint}?${queryString}`
-    : `${API_BASE_URL}${endpoint}`;
+    const response = await baseFetch(url, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...customHeaders,
+      },
+    });
 
-  const response = await fetch(url, {
-    method: 'GET',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...customHeaders, // ✅ only real headers now
-    },
-  });
-
-  return handleResponse(response);
-},
+    return handleResponse(response);
+  },
 
   post: async (endpoint, data, customHeaders = {}) => {
     const token = getAccessToken ? getAccessToken() : null;
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await baseFetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -62,7 +52,7 @@ export const createApiClient = (getAccessToken) => ({
   put: async (endpoint, data, customHeaders = {}) => {
     const token = getAccessToken ? getAccessToken() : null;
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await baseFetch(`${API_BASE_URL}${endpoint}`, {
       method: 'PUT',
       credentials: 'include',
       headers: {
@@ -79,7 +69,7 @@ export const createApiClient = (getAccessToken) => ({
   patch: async (endpoint, data, customHeaders = {}) => {
     const token = getAccessToken ? getAccessToken() : null;
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await baseFetch(`${API_BASE_URL}${endpoint}`, {
       method: 'PATCH',
       credentials: 'include',
       headers: {
@@ -96,7 +86,7 @@ export const createApiClient = (getAccessToken) => ({
   delete: async (endpoint, customHeaders = {}) => {
     const token = getAccessToken ? getAccessToken() : null;
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await baseFetch(`${API_BASE_URL}${endpoint}`, {
       method: 'DELETE',
       credentials: 'include',
       headers: {
@@ -112,7 +102,7 @@ export const createApiClient = (getAccessToken) => ({
   upload: async (endpoint, formData, customHeaders = {}) => {
     const token = getAccessToken ? getAccessToken() : null;
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await baseFetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
       body: formData,
       credentials: 'include',
@@ -126,6 +116,5 @@ export const createApiClient = (getAccessToken) => ({
   },
 });
 
-// Default instance
 export const api = createApiClient(null);
 export default api;

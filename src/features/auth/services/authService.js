@@ -1,4 +1,4 @@
-import api, { createApiClient } from '../../../utils/apiHelpers';
+import api, { createApiClient, API_BASE_URL } from '../../../utils/apiHelpers';
 
 export const authService = {
 
@@ -6,8 +6,21 @@ export const authService = {
     return api.post('/api/v1/auth/login', { email, password });
   },
 
+  // ✅ Raw fetch — bypasses baseFetch interceptor entirely
   refresh: async () => {
-    return api.post('/api/v1/auth/refresh');
+    const response = await window.fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || 'Refresh failed');
+    }
+
+    // ✅ Return as-is — backend already returns { success, data: { user, accessToken } }
+    return response.json();
   },
 
   forgotPassword: async (email) => {
@@ -21,14 +34,12 @@ export const authService = {
   verifyOtp: async (email, otp) => {
     return api.post('/api/v1/auth/verify-otp', { email, otp });
   },
-  
+
   resetPassword: async ({ newPassword, token }) => {
     return api.post(
       '/api/v1/auth/reset-password',
       { newPassword },
-      {
-        Authorization: `Bearer ${token}`
-      }
+      { Authorization: `Bearer ${token}` }
     );
   },
 
@@ -45,7 +56,7 @@ export const authService = {
     const protectedApi = createApiClient(getAccessToken);
     return protectedApi.put('/api/v1/auth/change-password', {
       currentPassword,
-      newPassword
+      newPassword,
     });
-  }
+  },
 };

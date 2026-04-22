@@ -112,7 +112,7 @@ const ListBuildings = () => {
     { header: 'Name', accessor: 'name' },
     { header: 'Address', accessor: 'address' },
     { header: 'Units', accessor: 'units' },
-    { header: 'Occupancy Rate', accessor: 'occupancyRate', render: row => `${row.occupancyRate}%` },
+    { header: 'Occupancy Rate', accessor: 'occupancyRate', render: row => `${row.occupancyRate}` },
     {
       header: 'Status',
       accessor: 'status',

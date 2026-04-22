@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { hasPermission, hasRole, hasAnyRole } from '../utils/permissions';
+import { hasPermission, hasRole, hasAnyRole, hasAnyPermission, hasAllPermissions } from '../utils/permissions';
 
 /**
  * RoleGuard component for conditional rendering based on user roles/permissions
@@ -51,29 +51,6 @@ const RoleGuard = ({
 
   // If no roles or permissions specified, or user has access, render children
   return children;
-};
-
-/**
- * Higher-order component for role-based access control
- * @param {string|string[]} roles - Required roles
- * @param {string|string[]} permissions - Required permissions
- * @param {ReactNode} fallback - Fallback component
- * @param {boolean} requireAll - Whether all permissions are required
- * @returns {Function} HOC function
- */
-export const withRoleGuard = (roles, permissions, fallback = null, requireAll = false) => {
-  return (WrappedComponent) => {
-    return (props) => (
-      <RoleGuard
-        roles={roles}
-        permissions={permissions}
-        fallback={fallback}
-        requireAll={requireAll}
-      >
-        <WrappedComponent {...props} />
-      </RoleGuard>
-    );
-  };
 };
 
 export default RoleGuard;

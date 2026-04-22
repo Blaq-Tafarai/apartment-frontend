@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { queryClient } from '../queryClient';
 import { authService } from '../features/auth/services/authService';
+import { resetRefreshState, setInitialized } from '../utils/httpClientWithRefresh';
 
 const AuthContext = createContext();
 
@@ -19,73 +20,107 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Get access token for API helpers
   const getAccessToken = useCallback(() => accessTokenRef.current, []);
-
-  // Initialize auth state
-  useEffect(() => {
-const initAuth = async () => {
-    if (logoutInProgressRef.current) {
-      console.log('Skipping auth init due to logout in progress');
-      setLoading(false);
-      return;
-    }
-    try {
-      setLoading(true);
-      // Try refresh using http-only cookie
-      const refreshResponse = await authService.refresh().catch(() => null);
-      
-      if (refreshResponse?.data?.accessToken) {
-        accessTokenRef.current = refreshResponse.data.accessToken;
-      }
-      const userData = {
-        ...refreshResponse?.data?.user,
-        mustChangePassword: refreshResponse?.data?.mustChangePassword ?? false
-      };
-      if (userData) {
-        setUser(userData);
-        localStorage.setItem('userProfile', JSON.stringify(userData));
-      }
-      setIsAuthenticated(!!accessTokenRef.current || !!userData);
-    } catch (error) {
-      console.error('Auth init failed:', error);
-      clearAuth();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  initAuth();
-}, []);
 
   const clearAuth = () => {
     accessTokenRef.current = null;
     localStorage.removeItem('userProfile');
+    localStorage.removeItem('loggedOutAt');
     setUser(null);
     setIsAuthenticated(false);
   };
 
-const login = async (email, password) => {
+  const authInitializedRef = useRef(false);
+
+  useEffect(() => {
+    // ✅ Prevents StrictMode double-invoke in development
+    if (authInitializedRef.current) return;
+    authInitializedRef.current = true;
+
+    const initAuth = async () => {
+      if (window.location.pathname.includes('/login')) {
+        setInitialized();
+        setLoading(false);
+        return;
+      }
+
+      if (logoutInProgressRef.current) {
+        setInitialized();
+        setLoading(false);
+        return;
+      }
+
+      const loggedOutAt = localStorage.getItem('loggedOutAt');
+      if (loggedOutAt && Date.now() - parseInt(loggedOutAt) < 5 * 60 * 1000) {
+        clearAuth();
+        setInitialized();
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const refreshResponse = await authService.refresh();
+
+        if (refreshResponse?.data?.accessToken) {
+          accessTokenRef.current = refreshResponse.data.accessToken;
+        }
+
+        const rawUser = refreshResponse?.data?.user;
+        if (rawUser) {
+          const userData = {
+            ...rawUser,
+            mustChangePassword: refreshResponse?.data?.mustChangePassword ?? false,
+          };
+          setUser(userData);
+          localStorage.setItem('userProfile', JSON.stringify(userData));
+        }
+
+        setIsAuthenticated(!!accessTokenRef.current && !!rawUser);
+      } catch (error) {
+        console.error('Auth init failed:', error);
+        clearAuth();
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
+      } finally {
+        setInitialized();
+        setLoading(false);
+      }
+    };
+
+    initAuth();
+  }, []);
+
+  const login = async (email, password) => {
     try {
+      localStorage.removeItem('loggedOutAt');
+      resetRefreshState();
       setLoading(true);
       const response = await authService.login(email, password);
-      
+
       if (response.data?.accessToken) {
         accessTokenRef.current = response.data.accessToken;
       }
-      const userData = {
-        ...response.data?.user,
-        mustChangePassword: response.data?.mustChangePassword ?? false
-      };
-      if (userData) {
+
+      const rawUser = response.data?.user;
+      if (rawUser) {
+        const userData = {
+          ...rawUser,
+          mustChangePassword: response.data?.mustChangePassword ?? false,
+        };
         setUser(userData);
         localStorage.setItem('userProfile', JSON.stringify(userData));
       }
+
       setIsAuthenticated(true);
-      return { success: true, user: userData, mustChangePassword: response.data?.mustChangePassword ?? false };
+      return {
+        success: true,
+        user: rawUser,
+        mustChangePassword: response.data?.mustChangePassword ?? false,
+      };
     } catch (error) {
-      const errorMsg = error.message || 'Login failed';
-      return { success: false, error: errorMsg };
+      return { success: false, error: error.message || 'Login failed' };
     } finally {
       setLoading(false);
     }
@@ -94,17 +129,21 @@ const login = async (email, password) => {
   const refreshToken = async () => {
     try {
       const response = await authService.refresh();
-      if (response.data?.accessToken) {
+
+      if (response?.data?.accessToken) {
         accessTokenRef.current = response.data.accessToken;
       }
-      const userData = {
-        ...response.data?.user,
-        mustChangePassword: response.data?.mustChangePassword ?? false
-      };
-      if (userData) {
+
+      const rawUser = response?.data?.user;
+      if (rawUser) {
+        const userData = {
+          ...rawUser,
+          mustChangePassword: response?.data?.mustChangePassword ?? false,
+        };
         setUser(userData);
         localStorage.setItem('userProfile', JSON.stringify(userData));
       }
+
       setIsAuthenticated(true);
       return { success: true };
     } catch (error) {
@@ -113,26 +152,26 @@ const login = async (email, password) => {
     }
   };
 
-const logout = async () => {
+  const logout = async () => {
     logoutInProgressRef.current = true;
     try {
       await authService.logout();
     } catch (error) {
       console.error('Logout API failed:', error);
     } finally {
-      // Invalidate all queries
       queryClient.clear();
       queryClient.invalidateQueries();
       clearAuth();
+      localStorage.setItem('loggedOutAt', Date.now().toString());
       logoutInProgressRef.current = false;
     }
   };
 
   const updateUser = (userData) => {
-    const updatedUser = { 
-      ...user, 
+    const updatedUser = {
+      ...user,
       ...userData,
-      mustChangePassword: userData.mustChangePassword ?? user?.mustChangePassword 
+      mustChangePassword: userData.mustChangePassword ?? user?.mustChangePassword,
     };
     localStorage.setItem('userProfile', JSON.stringify(updatedUser));
     setUser(updatedUser);
@@ -152,4 +191,3 @@ const logout = async () => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
