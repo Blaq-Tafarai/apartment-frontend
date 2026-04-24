@@ -110,18 +110,16 @@ const ListExpenses = () => {
 
   const expenses = useMemo(() => data?.data || [], [data]);
 
-  const getStatusColor = (paymentStatus) => {
-    switch (paymentStatus) {
-      case 'PAID':
-        return 'success';
-      case 'APPROVED':
-        return 'info';
-      case 'PENDING':
+  const getCategoryColor = (category) => {
+    switch (category) {
+      case 'utilities':
         return 'warning';
-      case 'OVERDUE':
+      case 'repairs':
+        return 'info';
+      case 'cleaning':
+        return 'success';
+      case 'security':
         return 'danger';
-      case 'CANCELLED':
-        return 'gray';
       default:
         return 'gray';
     }
@@ -130,24 +128,19 @@ const ListExpenses = () => {
   // Columns definition
   const columns = [
     { header: 'Building', accessor: 'building', render: row => row.building?.name || 'Property-wide' },
-    { header: 'Category', accessor: 'category' },
     { header: 'Description', accessor: 'description' },
-    { header: 'Vendor', accessor: 'vendor' },
     { header: 'Amount', accessor: 'amount', render: row => `$${row.amount}` },
     { header: 'Payment Method', accessor: 'paymentMethod' },
     {
-      header: 'Status',
-      accessor: 'paymentStatus',
+      header: 'Category',
+      accessor: 'category',
       render: row => (
-        <Badge color={getStatusColor(row.paymentStatus)} variant="soft">
-          {row.paymentStatus}
+        <Badge color={getCategoryColor(row.category)} variant="soft" dot>
+          {row.category}
         </Badge>
       ),
     },
-    { header: 'Due Date', accessor: 'dueDate', render: row => row.dueDate ? new Date(row.dueDate).toLocaleDateString() : 'N/A' },
-    { header: 'Paid At', accessor: 'paidAt', render: row => row.paidAt ? new Date(row.paidAt).toLocaleDateString() : 'N/A' },
-    { header: 'Recurring', accessor: 'recurring', render: row => row.recurring ? `${row.recurrenceFrequency}` : 'No' },
-    { header: 'Invoice #', accessor: 'invoiceNumber' },
+    { header: 'Paid At', accessor: 'paidAt', render: row => row.createdAt ? new Date(row.createdAt).toLocaleDateString() : 'N/A' },
     {
       header: 'Actions',
       render: row => (
@@ -282,7 +275,7 @@ const ListExpenses = () => {
         title="Expense Details"
         size="3xl"
       >
-        <ExpenseDetailsView expense={currentExpense} getStatusColor={getStatusColor} />
+        <ExpenseDetailsView expense={currentExpense} getCategoryColor = {getCategoryColor} />
       </Modal>
 
       {/* Delete Confirmation Modal */}
