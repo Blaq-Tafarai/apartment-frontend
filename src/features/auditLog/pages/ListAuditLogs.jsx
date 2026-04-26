@@ -138,7 +138,7 @@ const ListAuditLogs = () => {
           onSelectionChange={setSelectedLogs}
           pagination={{
             currentPage: page,
-            totalPages: data?.totalPages || 1,
+            totalPages: data?.meta?.totalPages || 1,
             onPageChange: setPage,
           }}
           onViewDetails={handleViewDetails}
@@ -150,7 +150,7 @@ const ListAuditLogs = () => {
           actionColors={actionColors}
           pagination={{
             currentPage: page,
-            totalPages: data?.totalPages || 1,
+            totalPages: data?.meta?.totalPages || 1,
             onPageChange: setPage,
           }}
         />

@@ -220,8 +220,10 @@ const ListUsers = () => {
           data={users}
           pagination={{
             currentPage: page,
-            totalPages: data?.totalPages || 1,
+            totalPages: data?.meta?.totalPages || 1,
             onPageChange: setPage,
+            totalItems: data?.meta?.total || 0,
+            itemsPerPage: limit,
           }}
         />
 
@@ -229,7 +231,9 @@ const ListUsers = () => {
         <div className="mt-4 flex justify-end">
           <Pagination
             currentPage={page}
-            totalPages={data?.totalPages || 1}
+            totalPages={data?.meta?.totalPages || 1}
+            totalItems={data?.meta?.total || 0}
+            itemsPerPage={limit}
             onPageChange={setPage}
           />
         </div>

@@ -276,7 +276,9 @@ const ListReports = () => {
           data={filteredReports}
           pagination={{
             currentPage: page,
-            totalPages: data?.totalPages || 1,
+            totalPages: data?.meta?.totalPages || 1,
+            totalItems: data?.meta?.total || 0,
+            itemsPerPage: limit,
             onPageChange: setPage,
           }}
         />
@@ -285,7 +287,9 @@ const ListReports = () => {
         <div className="mt-4 flex justify-end">
           <Pagination
             currentPage={page}
-            totalPages={data?.totalPages || 1}
+            totalPages={data?.meta?.totalPages || 1}
+            totalItems={data?.meta?.total || 0}
+            itemsPerPage={limit}
             onPageChange={setPage}
           />
         </div>

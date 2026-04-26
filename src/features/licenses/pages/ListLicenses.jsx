@@ -229,13 +229,21 @@ const ListLicenses = () => {
           columns={columns}
           data={licenses}
           loading={isLoading}
+          Pagination = {{
+            currentPage: page,
+            totalPages: data?.meta?.totalPages || 1,
+            totalItems: data?.meta?.total || 0,
+            itemsPerPage: limit,
+            onPageChange: setPage
+          }}
         />
 
         <div className="p-4 flex justify-end">
           <Pagination
             currentPage={page}
-            totalCount={data?.totalItems || 0}
-            pageSize={limit}
+            totalPages={data?.meta?.totalPages || 1}
+            totalItems={data?.meta?.total || 0}
+            itemsPerPage={limit}
             onPageChange={setPage}
           />
         </div>
