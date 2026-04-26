@@ -12,6 +12,7 @@ import AuditLogsTableView from '../components/AuditLogsTableView';
 import AuditLogsTimelineView from '../components/AuditLogsTimelineView';
 import AuditLogsDetailsModal from '../components/AuditLogsDetailsModal';
 import AuditLogsViewModeToggle from '../components/AuditLogsViewModeToggle';
+import Badge from '../../../components/ui/Badge';
 
 const ListAuditLogs = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,16 +42,28 @@ const ListAuditLogs = () => {
 
   const auditLogs = useMemo(() => data?.data || [], [data]);
 
+  const actionColors = (action) => {
+    switch (action) {
+      case 'create':
+        return 'success';
+      case 'update':
+        return 'info';
+      case 'delete':
+        return 'danger';
+      default:
+        return 'default';
+    }
+  };
+
   // Columns definition
   const columns = [
     { header: 'User', accessor: 'user', render: row => row.user?.name || 'System' },
-    { header: 'Action', accessor: 'action' },
-    { header: 'Entity Type', accessor: 'entityType' },
+    { header: 'Action', accessor: 'action', render: row => <Badge className="capitalize" color={actionColors(row.action)}>{row.action}</Badge> },
+    { header: 'Entity Type', accessor: 'entity' },
     { header: 'Entity ID', accessor: 'entityId' },
-    { header: 'Timestamp', accessor: 'timestamp', render: row => new Date(row.timestamp).toLocaleString() },
+    { header: 'Timestamp', accessor: 'createdAt', render: row => new Date(row.createdAt).toLocaleString() },
     { header: 'IP Address', accessor: 'ipAddress' },
     { header: 'User Agent', accessor: 'userAgent', render: row => row.userAgent ? row.userAgent.substring(0, 50) + '...' : 'N/A' },
-    { header: 'Notes', accessor: 'notes', render: row => row.notes ? row.notes.substring(0, 50) + '...' : 'N/A' },
     {
       header: 'Actions',
       render: row => (
@@ -134,10 +147,16 @@ const ListAuditLogs = () => {
         <AuditLogsTimelineView
           auditLogs={auditLogs}
           onViewDetails={handleViewDetails}
+          actionColors={actionColors}
+          pagination={{
+            currentPage: page,
+            totalPages: data?.totalPages || 1,
+            onPageChange: setPage,
+          }}
         />
       )}
 
-      <AuditLogsDetailsModal isOpen={showDetailsModal} onClose={() => setShowDetailsModal(false)} selectedLog={selectedLog} />
+      <AuditLogsDetailsModal isOpen={showDetailsModal} onClose={() => setShowDetailsModal(false)} selectedLog={selectedLog} actionColor={actionColors} />
     </div>
   );
 };

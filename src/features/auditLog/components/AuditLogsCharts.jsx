@@ -13,7 +13,7 @@ const AuditLogsCharts = ({ auditLogs }) => {
   const entityChartData = useMemo(() => {
     const entityCounts = {};
     auditLogs.forEach(log => {
-      entityCounts[log.entityType] = (entityCounts[log.entityType] || 0) + 1;
+      entityCounts[log.entity] = (entityCounts[log.entity] || 0) + 1;
     });
     return Object.entries(entityCounts).map(([name, value]) => ({ name, value }));
   }, [auditLogs]);

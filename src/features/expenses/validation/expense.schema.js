@@ -18,7 +18,7 @@ export const expenseSchema = z.object({
     message: 'Description is required',
   }),
     
-  amount: z.string()
+  amount: z.number()
   .optional()
   .refine((val) => !!val, {
     message: 'Amount is required',

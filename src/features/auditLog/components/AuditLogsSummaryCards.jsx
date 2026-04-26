@@ -3,11 +3,11 @@ import { Activity, CheckCircle, Edit, Trash2, Users, Database } from 'lucide-rea
 
 const AuditLogsSummaryCards = ({ auditLogs }) => {
   const totalLogs = auditLogs.length;
-  const createCount = auditLogs.filter(log => log.action === 'CREATE').length;
-  const updateCount = auditLogs.filter(log => log.action === 'UPDATE').length;
-  const deleteCount = auditLogs.filter(log => log.action === 'DELETE').length;
+  const createCount = auditLogs.filter(log => log.action === 'create').length;
+  const updateCount = auditLogs.filter(log => log.action === 'update').length;
+  const deleteCount = auditLogs.filter(log => log.action === 'delete').length;
   const activeUsers = new Set(auditLogs.map(log => log.userId)).size;
-  const entityTypes = new Set(auditLogs.map(log => log.entityType)).size;
+  const entityTypes = new Set(auditLogs.map(log => log.entity)).size;
 
   const cards = [
     {

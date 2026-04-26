@@ -2,17 +2,17 @@ import React, { useMemo } from 'react';
 import { Clock, Eye } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import Badge from '../../../components/ui/Badge';
+import Pagination from '../../../components/ui/Pagination';
 
-const AuditLogsTimelineView = ({ auditLogs, onViewDetails }) => {
+const AuditLogsTimelineView = ({ auditLogs, onViewDetails, actionColors, pagination }) => {
   const timelineData = useMemo(() => {
     return auditLogs.slice(0, 20).map(log => ({
       id: log.id,
-      timestamp: log.timestamp,
+      timestamp: log.createdAt,
       user: log.user?.name || 'System',
       action: log.action,
-      entityType: log.entityType,
+      entityType: log.entity,
       entityId: log.entityId,
-      notes: log.notes,
     })).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   }, [auditLogs]);
 
@@ -27,8 +27,8 @@ const AuditLogsTimelineView = ({ auditLogs, onViewDetails }) => {
           <div key={log.id} className="flex gap-4 pb-4 border-b border-gray-200 last:border-b-0">
             <div className="flex flex-col items-center">
               <div className={`w-3 h-3 rounded-full ${
-                log.action === 'CREATE' ? 'bg-green-500' :
-                log.action === 'UPDATE' ? 'bg-blue-500' :
+                log.action === 'create' ? 'bg-green-500' :
+                log.action === 'update' ? 'bg-blue-500' :
                 'bg-red-500'
               }`} />
               {index < timelineData.length - 1 && <div className="w-px h-8 bg-gray-300 mt-2" />}
@@ -36,16 +36,11 @@ const AuditLogsTimelineView = ({ auditLogs, onViewDetails }) => {
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-medium text-text-primary">{log.user}</span>
-                <Badge variant={
-                  log.action === 'CREATE' ? 'success' :
-                  log.action === 'UPDATE' ? 'primary' :
-                  'danger'
-                }>
+                <Badge color={actionColors(log.action)} variant="soft" className="capitalize">
                   {log.action}
                 </Badge>
                 <span className="text-text-secondary text-sm">{log.entityType} #{log.entityId}</span>
               </div>
-              <p className="text-sm text-text-secondary mb-1">{log.notes}</p>
               <p className="text-xs text-gray-500">{new Date(log.timestamp).toLocaleString()}</p>
             </div>
             <Button
@@ -59,6 +54,14 @@ const AuditLogsTimelineView = ({ auditLogs, onViewDetails }) => {
           </div>
         ))}
       </div>
+      <div className="mt-4 flex justify-end">
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          onPageChange={pagination.onPageChange}
+        />
+      </div>
+      
     </div>
   );
 };
