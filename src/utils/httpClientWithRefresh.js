@@ -6,14 +6,21 @@ let isRefreshing = false;
 let pendingRequests = [];
 let refreshFailedThisSession = false;
 let isInitialized = false;
+let currentAccessToken = null;
+
+export const setAccessToken = (token) => {
+  currentAccessToken = token;
+};
+
+export const getAccessToken = () => currentAccessToken;
 
 const processQueue = (error) => {
-  pendingRequests.forEach(p => p.reject(error));
+  pendingRequests.forEach((p) => p.reject(error));
   pendingRequests = [];
 };
 
 const retryQueue = () => {
-  pendingRequests.forEach(p => p.resolve());
+  pendingRequests.forEach((p) => p.resolve());
   pendingRequests = [];
 };
 
@@ -65,10 +72,18 @@ export const baseFetch = async (endpoint, options = {}) => {
     return response;
   }
 
+  // ✅ Prevent infinite refresh loops: if we already refreshed for this request, stop
+  if (options._refreshAttempted) {
+    refreshFailedThisSession = true;
+    redirectToLogin();
+    return response;
+  }
+
   if (isRefreshing) {
     return new Promise((resolve, reject) => {
       pendingRequests.push({
-        resolve: () => baseFetch(endpoint, options).then(resolve).catch(reject),
+        resolve: () =>
+          baseFetch(endpoint, options).then(resolve).catch(reject),
         reject,
       });
     });
@@ -77,10 +92,16 @@ export const baseFetch = async (endpoint, options = {}) => {
   isRefreshing = true;
 
   try {
-    await authService.refresh();
+    const refreshResponse = await authService.refresh();
+
+    // ✅ Store the new access token so retried requests can use it
+    if (refreshResponse?.data?.accessToken) {
+      setAccessToken(refreshResponse.data.accessToken);
+    }
+
     isRefreshing = false;
     retryQueue();
-    return baseFetch(endpoint, options);
+    return baseFetch(endpoint, { ...options, _refreshAttempted: true });
   } catch (refreshError) {
     isRefreshing = false;
     refreshFailedThisSession = true;

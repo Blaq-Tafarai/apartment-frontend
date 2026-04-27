@@ -75,25 +75,25 @@ const ListLicenses = () => {
   const handleFormSubmit = async (formData) => {
     try {
       if (modalMode === 'add') {
-        await createLicenseMutation.mutateAsync(formData);
-        toast({ title: 'License created successfully', variant: 'success' });
+        const response = await createLicenseMutation.mutateAsync(formData);
+        toast.success('Success', response?.message || 'License created successfully!');
       } else if (modalMode === 'edit') {
-        await updateLicenseMutation.mutateAsync({ id: currentLicense.id, ...formData });
-        toast({ title: 'License updated successfully', variant: 'success' });
+        const response = await updateLicenseMutation.mutateAsync({ id: currentLicense.id, payload: formData });
+        toast.success('Success', response?.message || 'License updated successfully!');
       }
       setIsFormModalOpen(false);
     } catch (error) {
-      toast({ title: 'An error occurred. Please try again.', variant: 'destructive' });
+      toast.error('Error', error?.message || 'An error occurred. Please try again.');
     }
   };
 
   const handleDeleteLicenseConfirm = async () => {
     try {
       await deleteLicenseMutation.mutateAsync(currentLicense.id);
-      toast({ title: 'License deleted successfully', variant: 'success' });
+      toast.success('Success', Response?.message || 'License deleted successfully!');
       setIsDeleteModalOpen(false);
     } catch (error) {
-      toast({ title: 'An error occurred. Please try again.', variant: 'destructive' });
+      toast.error('Error', error?.message || 'An error occurred. Please try again.');
     }
   };
 
@@ -260,7 +260,7 @@ const ListLicenses = () => {
             <Button aria-label="Cancel" variant="outline" onClick={() => setIsFormModalOpen(false)}>
               Cancel
             </Button>
-            <Button variant="primary" onClick={() => handleFormSubmit()} aria-label="Submit" form="license-form" type="submit" disabled={createLicenseMutation.isLoading || updateLicenseMutation.isLoading}>
+            <Button variant="primary" aria-label="Submit" form="license-form" type="submit" disabled={createLicenseMutation.isLoading || updateLicenseMutation.isLoading}>
               {modalMode === 'add' ? 'Create' : 'Update'}
             </Button>
           </>
@@ -269,6 +269,7 @@ const ListLicenses = () => {
         <LicenseForm
           defaultValues={modalMode === 'edit' ? currentLicense : undefined}
           mode={modalMode}
+          onSubmit={handleFormSubmit}
           onClose={() => setIsFormModalOpen(false)}
         />
       </Modal>

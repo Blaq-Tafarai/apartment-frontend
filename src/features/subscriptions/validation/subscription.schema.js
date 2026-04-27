@@ -13,14 +13,10 @@ organizationId: z
     message: 'Billing cycle is required',
   }),
 
-  price: z.string()
-  .optional()
-  .refine((val) => !!val, {
-    message: 'Price is required',
-  })
-  .refine((val) => /^\d+(\.\d{1,2})?$/.test(val || ''), {
-    message: 'Price must be a valid number with up to 2 decimal places',
-  }),
+  price: z.preprocess(
+      (val) => (val === '' || val === undefined || val === null ? undefined : Number(val)),
+      z.number({ required_error: 'Price is required', invalid_type_error: 'Price must be a valid number' })
+    ),
 
   startDate: z
   .string()

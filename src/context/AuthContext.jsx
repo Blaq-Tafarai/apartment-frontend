@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { queryClient } from '../queryClient';
 import { authService } from '../features/auth/services/authService';
-import { resetRefreshState, setInitialized } from '../utils/httpClientWithRefresh';
+import { resetRefreshState, setInitialized, setAccessToken } from '../utils/httpClientWithRefresh';
 
 const AuthContext = createContext();
 
@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }) => {
 
   const clearAuth = () => {
     accessTokenRef.current = null;
+    setAccessToken(null);
     localStorage.removeItem('userProfile');
     localStorage.removeItem('loggedOutAt');
     setUser(null);
@@ -64,6 +65,7 @@ export const AuthProvider = ({ children }) => {
 
         if (refreshResponse?.data?.accessToken) {
           accessTokenRef.current = refreshResponse.data.accessToken;
+          setAccessToken(refreshResponse.data.accessToken);
         }
 
         const rawUser = refreshResponse?.data?.user;
@@ -101,6 +103,7 @@ export const AuthProvider = ({ children }) => {
 
       if (response.data?.accessToken) {
         accessTokenRef.current = response.data.accessToken;
+        setAccessToken(response.data.accessToken);
       }
 
       const rawUser = response.data?.user;
@@ -132,6 +135,7 @@ export const AuthProvider = ({ children }) => {
 
       if (response?.data?.accessToken) {
         accessTokenRef.current = response.data.accessToken;
+        setAccessToken(response.data.accessToken);
       }
 
       const rawUser = response?.data?.user;

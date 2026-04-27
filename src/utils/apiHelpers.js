@@ -1,4 +1,4 @@
-import { baseFetch } from './httpClientWithRefresh.js';
+import { baseFetch, getAccessToken as getGlobalAccessToken } from './httpClientWithRefresh.js';
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -13,7 +13,7 @@ const handleResponse = async (response) => {
 export const createApiClient = (getAccessToken) => ({
 
   get: async (endpoint, params = {}, customHeaders = {}) => {
-    const token = getAccessToken ? getAccessToken() : null;
+    const token = getAccessToken ? getAccessToken() : getGlobalAccessToken();
     const queryString = new URLSearchParams(params).toString();
     const url = queryString
       ? `${API_BASE_URL}${endpoint}?${queryString}`
@@ -33,7 +33,7 @@ export const createApiClient = (getAccessToken) => ({
   },
 
   post: async (endpoint, data, customHeaders = {}) => {
-    const token = getAccessToken ? getAccessToken() : null;
+    const token = getAccessToken ? getAccessToken() : getGlobalAccessToken();
 
     const response = await baseFetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
@@ -50,7 +50,7 @@ export const createApiClient = (getAccessToken) => ({
   },
 
   put: async (endpoint, data, customHeaders = {}) => {
-    const token = getAccessToken ? getAccessToken() : null;
+    const token = getAccessToken ? getAccessToken() : getGlobalAccessToken();
 
     const response = await baseFetch(`${API_BASE_URL}${endpoint}`, {
       method: 'PUT',
@@ -67,7 +67,7 @@ export const createApiClient = (getAccessToken) => ({
   },
 
   patch: async (endpoint, data, customHeaders = {}) => {
-    const token = getAccessToken ? getAccessToken() : null;
+    const token = getAccessToken ? getAccessToken() : getGlobalAccessToken();
 
     const response = await baseFetch(`${API_BASE_URL}${endpoint}`, {
       method: 'PATCH',
@@ -84,7 +84,7 @@ export const createApiClient = (getAccessToken) => ({
   },
 
   delete: async (endpoint, customHeaders = {}) => {
-    const token = getAccessToken ? getAccessToken() : null;
+    const token = getAccessToken ? getAccessToken() : getGlobalAccessToken();
 
     const response = await baseFetch(`${API_BASE_URL}${endpoint}`, {
       method: 'DELETE',
@@ -100,7 +100,7 @@ export const createApiClient = (getAccessToken) => ({
   },
 
   upload: async (endpoint, formData, customHeaders = {}) => {
-    const token = getAccessToken ? getAccessToken() : null;
+    const token = getAccessToken ? getAccessToken() : getGlobalAccessToken();
 
     const response = await baseFetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
@@ -118,3 +118,4 @@ export const createApiClient = (getAccessToken) => ({
 
 export const api = createApiClient(null);
 export default api;
+
