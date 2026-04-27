@@ -1,78 +1,35 @@
-import { mockLicenses } from '../mocks/licenses.mock';
-
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
-
-const simulateDelay = () =>
-  new Promise(resolve => setTimeout(resolve, 300));
+import api from '../../../utils/apiHelpers'
 
 export const licensesService = {
-  async getAll( { page = 1, limit = 10, search = '' } = {}) {
-    if (USE_MOCK) {
-      await simulateDelay();
-
-      let filtered = mockLicenses;
-
-      if (search) {
-        filtered = filtered.filter(l =>
-          [
-            l.name,
-            l.description,
-          ]
-            .join(' ')
-            .toLowerCase()
-            .includes(search.toLowerCase())
-        )
-      }
-
-      const totalItems = filtered.length;
-      const totalPages = Math.ceil(totalItems / limit);
-
-      const start = (page - 1) * limit;
-      const data = filtered.slice(start, start + limit);
-
-      return {
-        data,
-        totalItems,
-        totalPages,
-        currentPage: page,
-        itemsPerPage: limit,
-      }
-    }
+  // Get all licenses with optional filtering/pagination
+  async getAll(params = {}) {
+    return api.get('/api/v1/licenses', params)
   },
 
-  getById(id) {
-    if (USE_MOCK) {
-      return Promise.resolve(
-        mockLicenses.find(l => l.id === id)
-      );
-    }
-
-    return api.get(`/licenses/${id}`);
+  // Get license by ID
+  async getById(id) {
+    return api.get(`/api/v1/licenses/${id}`)
   },
 
-  create(payload) {
-    if (USE_MOCK) {
-      return Promise.resolve(payload);
-    }
-
-    return api.post('/licenses', payload);
+  // Create new license
+  async create(licenseData) {
+    return api.post('/api/v1/licenses', licenseData)
   },
 
-  update(id, payload) {
-    if (USE_MOCK) {
-      return Promise.resolve({ ...payload, id });
-    }
-
-    return api.put(`/licenses/${id}`, payload);
+  // Update license
+  async update(id, data) {
+    return api.put(`/api/v1/licenses/${id}`, data)
   },
 
-  delete(id) {
-    if (USE_MOCK) {
-      return Promise.resolve();
-    }
-
-    return api.delete(`/licenses/${id}`);
+  // Delete license
+  async delete(id) {
+    return api.delete(`/api/v1/licenses/${id}`)
   },
-};
 
-export default licensesService;
+  // Get license statistics (for UI usage)
+  async getStats(licenseId) {
+    return api.get(`/api/v1/licenses/${licenseId}/stats`)
+  },
+}
+
+export default licensesService

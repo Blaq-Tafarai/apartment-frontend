@@ -2,18 +2,18 @@ import React from 'react';
 
 const InvoiceSummaryCards = ({ invoices }) => {
   const totalInvoices = invoices.length;
-  const paidInvoices = invoices.filter(inv => inv.status === 'Paid').length;
-  const pendingInvoices = invoices.filter(inv => inv.status === 'Pending').length;
-  const overdueInvoices = invoices.filter(inv => inv.status === 'Overdue').length;
+  const paidInvoices = invoices.filter(inv => inv.status === 'paid').length;
+  const pendingInvoices = invoices.filter(inv => inv.status === 'pending').length;
+  const overdueInvoices = invoices.filter(inv => inv.status === 'overdue').length;
   const totalRevenue = invoices.reduce((sum, inv) => sum + inv.amount, 0);
   const paidRevenue = invoices
-    .filter(inv => inv.status === 'Paid')
+    .filter(inv => inv.status === 'paid')
     .reduce((sum, inv) => sum + inv.amount, 0);
   const pendingRevenue = invoices
-    .filter(inv => inv.status === 'Pending')
+    .filter(inv => inv.status === 'pending')
     .reduce((sum, inv) => sum + inv.amount, 0);
   const overdueRevenue = invoices
-    .filter(inv => inv.status === 'Overdue')
+    .filter(inv => inv.status === 'overdue')
     .reduce((sum, inv) => sum + inv.amount, 0);
 
   return (

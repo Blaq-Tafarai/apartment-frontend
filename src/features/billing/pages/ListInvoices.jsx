@@ -14,6 +14,7 @@ import { useToast } from '../../../components/ui/Toast';
 import InvoiceDetailsView from '../components/InvoiceDetailsView';
 import { useCreateInvoice, useUpdateInvoice, useDeleteInvoice } from '../hooks/useInvoices';
 import Tooltip from '../../../components/ui/Tooltip';
+import { formData } from '../../../utils/formatDate';
 
 const ListInvoices = () => {
   const { toast } = useToast();
@@ -26,7 +27,7 @@ const ListInvoices = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [currentInvoice, setCurrentInvoice] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
+  const [modalMode, setModalMode] = useState('add');
 
   const handleAddInvoice = () => {
     setModalMode('add');
@@ -94,23 +95,20 @@ const ListInvoices = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Paid':
-        return 'success';
-      case 'Pending':
+      case 'pending':
         return 'warning';
-      case 'Overdue':
+      case 'paid':
+        return 'success';
+      case 'overdue':
         return 'danger';
-      case 'Cancelled':
-        return 'gray';
       default:
-        return 'gray';
+        return 'info';
     }
   }
 
   // Columns definition
   const columns = [
-    { header: 'Invoice #', accessor: 'invoiceNumber' },
-    { header: 'Tenant', accessor: 'tenant' },
+    { header: 'Tenant', accessor: 'tenant?.user?.name', render: row => row.tenant?.user?.name || 'N/A' },
     { header: 'Amount', accessor: 'amount', render: row => `$${row.amount}` },
     {
       header: 'Status',
@@ -121,8 +119,10 @@ const ListInvoices = () => {
         </Badge>
       ),
     },
-    { header: 'Due Date', accessor: 'dueDate' },
-    { header: 'Issue Date', accessor: 'issueDate' },
+    { header: 'Apartment', accessor: 'lease?.apartment?.unitNumber', render: row => row.lease?.apartment?.unitNumber || 'N/A' },
+    { header: 'Building', accessor: 'lease?.apartment?.building?.name', render: row => row.lease?.apartment?.building?.name || 'N/A' },
+    { header: 'Issue Date', accessor: 'issueDate', render: row => row.issueDate ? new Date(row.issueDate).toLocaleDateString() : 'N/A' },
+    { header: 'Due Date', accessor: 'dueDate', render: row => row.dueDate ? new Date(row.dueDate).toLocaleDateString() : 'N/A' },
     {
       header: 'Actions',
       render: row => (
@@ -219,7 +219,7 @@ const ListInvoices = () => {
           data={invoices}
           pagination={{
             currentPage: page,
-            totalPages: data?.totalPages || 1,
+            totalPages: data?.meta?.totalPages || 1,
             onPageChange: setPage,
           }}
         />
@@ -228,7 +228,9 @@ const ListInvoices = () => {
         <div className="mt-4 flex justify-end">
           <Pagination
             currentPage={page}
-            totalPages={data?.totalPages || 1}
+            totalPages={data?.meta?.totalPages || 1}
+            totalItems={data?.meta?.total || 0}
+            itemsPerPage={limit}
             onPageChange={setPage}
           />  
         </div>
@@ -253,7 +255,7 @@ const ListInvoices = () => {
         }
       >
         <InvoiceForm
-          defaultValues={modalMode === 'edit' ? currentInvoice : {}}
+          defaultValues={modalMode === 'edit' ? currentInvoice : null}
           onSubmit={handleFormSubmit}
           modalMode={modalMode}
         />
@@ -286,7 +288,7 @@ const ListInvoices = () => {
           </>
         }
       >
-        <p>Are you sure you want to delete invoice #{currentInvoice?.invoiceNumber}?</p>
+        <p>Are you sure you want to delete this invoice?</p>
       </Modal>
     </div>
   );

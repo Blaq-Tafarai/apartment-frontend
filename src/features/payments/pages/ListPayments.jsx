@@ -69,41 +69,41 @@ const ListPayments = () => {
   //Handler for crud operations
   const handleFormSubmit = async (formData) => {
     try {
-      
+      let response;
       if (modalMode === 'add') {
-        await createPaymentMutation.mutateAsync(formData);
-        toast.success('Payment recorded successfully');
+        response = await createPaymentMutation.mutateAsync(formData);
+        toast.success('Success', response?.message || 'Payment recorded successfully');
       } else {
-        await updatePaymentMutation.mutateAsync({ id: currentPayment.id, ...formData });
-        toast.success('Payment updated successfully');
+        response = await updatePaymentMutation.mutateAsync({ id: currentPayment.id, payload: formData });
+        toast.success('Success', response?.message || 'Payment updated successfully');
       }
       setIsFormModalOpen(false);
     } catch (error) {
-      toast.error('An error occurred. Please try again.');
+      toast.error('Error', error?.message || 'An error occurred. Please try again.');
     }
   };
 
   const handleDeleteConfirm = async () => {
     try {
-      await deletePaymentMutation.mutateAsync(currentPayment.id);
-      toast.success('Payment deleted successfully');
+      const response = await deletePaymentMutation.mutateAsync(currentPayment.id);
+      toast.success('Success', response?.message || 'Payment deleted successfully');
       setIsDeleteModalOpen(false);
     } catch (error) {
-      toast.error('An error occurred. Please try again.');
+      toast.error('Error', error?.message || 'An error occurred. Please try again.');
     }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'COMPLETED':
+      case 'completed':
         return 'success';
-      case 'PENDING':
+      case 'pending':
         return 'warning';
-      case 'FAILED':
+      case 'failed':
         return 'danger';
-      case 'REFUNDED':
+      case 'refunded':
         return 'info';
-      case 'CANCELLED':
+      case 'cancelled':
         return 'danger';
       default:
         return 'gray';
@@ -112,24 +112,21 @@ const ListPayments = () => {
 
   // Columns definition
   const columns = [
-    { header: 'Tenant', accessor: 'tenant', render: row => row.tenant?.name || 'N/A' },
-    { header: 'Building', accessor: 'building', render: row => row.building?.name || 'N/A' },
-    { header: 'Apartment', accessor: 'apartment', render: row => row.apartment?.number || 'N/A' },
+    { header: 'Tenant', accessor: 'tenant', render: row => row.billing?.tenant?.user?.name || 'N/A' },
+    { header: 'Building', accessor: 'building', render: row => row.billing?.lease?.apartment?.building?.name || 'N/A' },
+    { header: 'Apartment', accessor: 'apartment', render: row => row.billing?.lease?.apartment?.unitNumber || 'N/A' },
     { header: 'Amount', accessor: 'amount', render: row => `$${row.amount}` },
-    { header: 'Type', accessor: 'type' },
-    { header: 'Method', accessor: 'method' },
+    { header: 'Method', accessor: 'paymentMethod' },
     {
       header: 'Status',
       accessor: 'status',
       render: (row) => (
-        <Badge color={getStatusColor(row.status)} variant="solid" dot>
+        <Badge color={getStatusColor(row.status)} variant="soft" dot>
           {row.status} 
         </Badge>
       ),
     },
-    { header: 'Due Date', accessor: 'dueDate', render: row => row.dueDate ? new Date(row.dueDate).toLocaleDateString() : 'N/A' },
-    { header: 'Paid At', accessor: 'paidAt', render: row => row.paidAt ? new Date(row.paidAt).toLocaleDateString() : 'N/A' },
-    { header: 'Invoice #', accessor: 'invoiceNumber' },
+    { header: 'Paid At', accessor: 'createdAt', render: row => row.createdAt ? new Date(row.createdAt).toLocaleDateString() : 'N/A' },
     {
       header: 'Actions',
       render: row => (
@@ -204,8 +201,10 @@ const ListPayments = () => {
           data={payments}
           pagination={{
             currentPage: page,
-            totalPages: data?.totalPages || 1,
-            onPageChange: setPage,
+            totalPages: data?.meta?.totalPages || 1,
+            totalItems: data?.meta?.total || 0,
+            itemsPerPage: limit,
+            onPageChange: setPage
           }}
         />
 
@@ -213,7 +212,9 @@ const ListPayments = () => {
         <div className="mt-4 flex justify-end">
           <Pagination
             currentPage={page}
-            totalPages={data?.totalPages || 1}
+            totalPages={data?.meta?.totalPages || 1}
+            totalItems={data?.meta?.total || 0}
+            itemsPerPage={limit}
             onPageChange={setPage}
           />
         </div>

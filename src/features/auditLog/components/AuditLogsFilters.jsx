@@ -22,28 +22,32 @@ const AuditLogsFilters = ({ searchTerm, onSearchChange, filters, onFiltersChange
           <label className="block text-sm font-medium text-text-secondary mb-1">Action</label>
           <Select
             value={filters.action}
-            onChange={e => onFiltersChange(prev => ({ ...prev, action: e.target.value }))}
+            onChange={value => onFiltersChange(prev => ({ ...prev, action: value }))}
+            options={[
+              { value: "", label: "All" },
+              { value: "create", label: "CREATE" },
+              { value: "update", label: "UPDATE" },
+              { value: "delete", label: "DELETE" },
+            ]}
           >
-            <option value="">All</option>
-            <option value="CREATE">CREATE</option>
-            <option value="UPDATE">UPDATE</option>
-            <option value="DELETE">DELETE</option>
           </Select>
         </div>
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-1">Entity Type</label>
           <Select
-            value={filters.entityType}
-            onChange={e => onFiltersChange(prev => ({ ...prev, entityType: e.target.value }))}
+            value={filters.entity}
+            onChange={value => onFiltersChange(prev => ({ ...prev, entity: value }))}
+            options={[
+              { value: '', label: 'All' },
+              { value: 'user', label: 'User' },
+              { value: 'lease', label: 'Lease' },
+              { value: 'payment', label: 'Payment' },
+              { value: 'maintenance', label: 'Maintenance Request' },
+              { value: 'billing', label: 'Billing' },
+              { value: 'company', label: 'Company' },
+              { value: 'apartment', label: 'Apartment' },
+            ]}
           >
-            <option value="">All</option>
-            <option value="tenant">Tenant</option>
-            <option value="building">Building</option>
-            <option value="apartment">Apartment</option>
-            <option value="payment">Payment</option>
-            <option value="lease">Lease</option>
-            <option value="expense">Expense</option>
-            <option value="maintenance">Maintenance</option>
           </Select>
         </div>
         <div>

@@ -257,6 +257,3 @@ For issues, questions, or suggestions, please open an issue on GitHub.
 - [ ] Implement email notifications
 - [ ] Add multi-property support
 
----
-
-Built with ❤️ using React and Tailwind CSS

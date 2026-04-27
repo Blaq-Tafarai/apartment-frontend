@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, X } from 'lucide-react';
+import { AlertCircle, AlertTriangleIcon, ArrowDown, ArrowUp, Eye, EyeOff, X } from 'lucide-react';
 
 const sizes = {
   sm: 'px-3 py-1.5 text-sm',
@@ -177,7 +177,12 @@ const Input = React.forwardRef(({
 
       {/* Error */}
       {error && (
-        <p id={errorId} className="mt-1 text-sm text-danger">{error}</p>
+        <div className="mt-1 flex items-center">
+          <span>
+            <AlertCircle className="w-4 h-4 inline-block mr-1 text-danger" />
+          </span>
+          <p id={errorId} className="mt-1 text-sm text-danger">{error}</p>
+        </div>
       )}
     </div>
   );
@@ -242,7 +247,6 @@ export const NumberInput = React.forwardRef(({
     <div className="relative">
       <Input
         ref={ref}
-        // type="number"
         value={value}
         onChange={onChange}
         min={min}
@@ -250,14 +254,14 @@ export const NumberInput = React.forwardRef(({
         step={step}
         {...props}
       />
-      <div className="absolute right-1 top-2/3 transform -translate-y-1/2 flex flex-col">
+      <div className="absolute right-1 top-[70%] -translate-y-1/2 flex flex-col border border-border-color rounded-md overflow-hidden bg-surface">
         <button
           type="button"
           onClick={handleIncrement}
           aria-label="Increase value"
           className="px-2 py-0.5 text-xs text-text-secondary hover:text-text-primary hover:bg-surface-variant rounded-t"
         >
-          ▲
+          <ArrowUp className="w-3 h-3" />
         </button>
         <button
           type="button"
@@ -265,7 +269,7 @@ export const NumberInput = React.forwardRef(({
           aria-label="Decrease value"
           className="px-2 py-0.5 text-xs text-text-secondary hover:text-text-primary hover:bg-surface-variant rounded-b"
         >
-          ▼
+          <ArrowDown className="w-3 h-3" />
         </button>
       </div>
     </div>

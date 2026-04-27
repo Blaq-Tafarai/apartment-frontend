@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { ChevronDown, X, Check, Search } from 'lucide-react';
+import { ChevronDown, X, Check, Search, AlertCircle } from 'lucide-react';
 
 /**
  * Select Component
@@ -222,7 +222,14 @@ const Select = React.forwardRef(({
         <input type="hidden" name={name} value={value || ''} />
       </div>
 
-      {error && <p id={errorId} className="mt-1 text-sm text-danger">{error}</p>}
+      {error && 
+      <div className="mt-1 flex items-center">
+          <span>
+            <AlertCircle className="w-4 h-4 inline-block mr-1 text-danger" />
+          </span>
+          <p id={errorId} className="mt-1 text-sm text-danger">{error}</p>
+        </div>
+      }
 
       {/* Dropdown */}
       {isOpen && (

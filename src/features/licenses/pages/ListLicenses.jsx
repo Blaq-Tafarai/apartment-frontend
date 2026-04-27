@@ -5,14 +5,12 @@ import {
   EyeIcon,
   Edit,
   Trash2,
-  Crown,
-  Star
 } from 'lucide-react';
 import Button, { IconButton } from '../../../components/ui/Button';
 import Table from '../../../components/ui/Table';
 import Input from '../../../components/ui/Input';
 import Modal from '../../../components/ui/Modal';
-import { useLicenses, useCompanies, useCreateLicense, useUpdateLicense, useDeleteLicense } from '../hooks/useLicenses';
+import { useLicenses, useCreateLicense, useUpdateLicense, useDeleteLicense } from '../hooks/useLicenses';
 import useDebounce from '../../../hooks/useDebounce';
 import { useToast } from '../../../components/ui/Toast';
 import Pagination from '../../../components/ui/Pagination';
@@ -77,62 +75,40 @@ const ListLicenses = () => {
   const handleFormSubmit = async (formData) => {
     try {
       if (modalMode === 'add') {
-        await createLicenseMutation.mutateAsync(formData);
-        toast({ title: 'License created successfully', variant: 'success' });
+        const response = await createLicenseMutation.mutateAsync(formData);
+        toast.success('Success', response?.message || 'License created successfully!');
       } else if (modalMode === 'edit') {
-        await updateLicenseMutation.mutateAsync({ id: currentLicense.id, ...formData });
-        toast({ title: 'License updated successfully', variant: 'success' });
+        const response = await updateLicenseMutation.mutateAsync({ id: currentLicense.id, payload: formData });
+        toast.success('Success', response?.message || 'License updated successfully!');
       }
       setIsFormModalOpen(false);
     } catch (error) {
-      toast({ title: 'An error occurred. Please try again.', variant: 'destructive' });
+      toast.error('Error', error?.message || 'An error occurred. Please try again.');
     }
   };
 
   const handleDeleteLicenseConfirm = async () => {
     try {
       await deleteLicenseMutation.mutateAsync(currentLicense.id);
-      toast({ title: 'License deleted successfully', variant: 'success' });
+      toast.success('Success', Response?.message || 'License deleted successfully!');
       setIsDeleteModalOpen(false);
     } catch (error) {
-      toast({ title: 'An error occurred. Please try again.', variant: 'destructive' });
+      toast.error('Error', error?.message || 'An error occurred. Please try again.');
     }
   };
-
-  const featureColor = (type) => {
-    switch (type) {
-      case 'enterprise':
-        return 'primary';
-      case 'professional':
-        return 'info';
-      case 'basic':
-        return 'gray';
-      default:
-        return 'gray';
-    }
-  }
-
 
   // Columns definition
   const columns = [
     {
-      header: 'License',
-      accessor: 'name',
+      header: 'Assignment',
+      accessor: 'organizationId',
       render: row => (
-        <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg ${
-            row.type === 'enterprise' ? 'bg-purple-100 text-purple-600' :
-            row.type === 'professional' ? 'bg-blue-100 text-blue-600' :
-            'bg-gray-100 text-gray-600'
-          }`}>
-            {row.type === 'enterprise' && <Crown className="w-4 h-4" />}
-            {row.type === 'professional' && <Star className="w-4 h-4" />}
-            {row.type === 'basic' && <Key className="w-4 h-4" />}
+        <div className="space-y-1">
+          <div className="font-medium truncate max-w-[200px]">
+            {row.organization.name}
           </div>
-
-          <div>
-            <div className="font-medium">{row.name}</div>
-            <div className="text-sm text-text-secondary capitalize">{row.type}</div>
+          <div className="text-sm text-text-secondary truncate max-w-[200px]">
+            {row.subscription.planName}
           </div>
         </div>
       ),
@@ -140,51 +116,50 @@ const ListLicenses = () => {
     {
       header: 'Limits',
       render: row => (
-        <div className="text-sm">
+        <div className="text-sm space-y-1">
+          <div>Users: {row.maxUsers === -1 ? '∞' : row.maxUsers}</div>
           <div>Buildings: {row.maxBuildings === -1 ? '∞' : row.maxBuildings}</div>
-          <div>Tenants: {row.maxTenants === -1 ? '∞' : row.maxTenants}</div>
-          <div>Managers: {row.maxManagers === -1 ? '∞' : row.maxManagers}</div>
-        </div>
-      ),
-    },
-    {
-      header: 'Usage',
-      render: row => {
-        const stats = row.stats;
-        return (
-          <div className="text-sm">
-            <div className="font-medium">{stats?.used || 0} companies</div>
-            <div className="text-text-secondary">
-              {stats?.available === 'Unlimited' ? 'No limit' : `${stats?.available} available`}
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      header: 'Price',
-      accessor: 'price',
-      render: row => (
-        <div className="font-medium text-green-600">
-          ${row.price}/month
+          <div>Apts: {row.maxApartments === -1 ? '∞' : row.maxApartments}</div>
         </div>
       ),
     },
     {
       header: 'Features',
-      accessor: 'features',
       render: row => (
         <div className="flex flex-wrap gap-1">
-          {row.features.slice(0, 2).map((feature, index) => (
-            <Badge key={index} color={featureColor(row.type)} variant="soft">
-              {feature}
+          {row.features.reportExports && (
+            <Badge color="success" variant="soft" size="sm">
+              Reports
             </Badge>
-          ))}
-          {row.features.length > 2 && (
-            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-              +{row.features.length - 2} more
-            </span>
           )}
+          {row.features.cloudStorage && (
+            <Badge color="info" variant="soft" size="sm">
+              Storage
+            </Badge>
+          )}
+          {row.features.apiAccess && (
+            <Badge color="primary" variant="soft" size="sm">
+              API
+            </Badge>
+          )}
+        </div>
+      ),
+    },
+    {
+      header: 'Created',
+      accessor: 'createdAt',
+      render: row => (
+        <div className="text-sm font-medium">
+          {new Date(row.createdAt).toLocaleDateString()}
+        </div>
+      ),
+    },
+    {
+      header: 'Expires',
+      accessor: 'expiresAt',
+      render: row => (
+        <div className="text-sm font-medium">
+          {new Date(row.expiresAt).toLocaleDateString()}
         </div>
       ),
     },
@@ -208,7 +183,6 @@ const ListLicenses = () => {
     },
   ];
 
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -231,7 +205,7 @@ const ListLicenses = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-text-primary">Licenses</h1>
-          <p className="text-text-secondary mt-1">Manage your licenses and subscriptions</p>
+          <p className="text-text-secondary mt-1">Manage organization licenses and subscriptions</p>
         </div>
         <Button leftIcon={<Plus size={16} />} variant="primary" onClick={handleAddLicense} aria-label="Create License">
           Create License
@@ -242,7 +216,7 @@ const ListLicenses = () => {
       <div className="mb-4">
         <Input
           type="text"
-          placeholder="Search maintenance requests..."
+          placeholder="Search licenses by organization or subscription..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
           className="input input-bordered w-full md:w-1/3"
@@ -255,13 +229,21 @@ const ListLicenses = () => {
           columns={columns}
           data={licenses}
           loading={isLoading}
+          Pagination = {{
+            currentPage: page,
+            totalPages: data?.meta?.totalPages || 1,
+            totalItems: data?.meta?.total || 0,
+            itemsPerPage: limit,
+            onPageChange: setPage
+          }}
         />
 
         <div className="p-4 flex justify-end">
           <Pagination
             currentPage={page}
-            totalCount={data?.total || 0}
-            pageSize={limit}
+            totalPages={data?.meta?.totalPages || 1}
+            totalItems={data?.meta?.total || 0}
+            itemsPerPage={limit}
             onPageChange={setPage}
           />
         </div>
@@ -272,13 +254,13 @@ const ListLicenses = () => {
         isOpen={isFormModalOpen}
         onClose={() => setIsFormModalOpen(false)}
         title={modalMode === 'add' ? 'Create License' : 'Edit License'}
-        size="3xl"
+        size="4xl"
         footer={
           <>
             <Button aria-label="Cancel" variant="outline" onClick={() => setIsFormModalOpen(false)}>
               Cancel
             </Button>
-            <Button variant="primary" onClick={() => handleFormSubmit()} aria-label="Submit" form="license-form" type="submit" disabled={createLicenseMutation.isLoading || updateLicenseMutation.isLoading}>
+            <Button variant="primary" aria-label="Submit" form="license-form" type="submit" disabled={createLicenseMutation.isLoading || updateLicenseMutation.isLoading}>
               {modalMode === 'add' ? 'Create' : 'Update'}
             </Button>
           </>
@@ -287,6 +269,7 @@ const ListLicenses = () => {
         <LicenseForm
           defaultValues={modalMode === 'edit' ? currentLicense : undefined}
           mode={modalMode}
+          onSubmit={handleFormSubmit}
           onClose={() => setIsFormModalOpen(false)}
         />
       </Modal>

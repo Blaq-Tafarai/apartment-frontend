@@ -1,91 +1,80 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { licensesService } from '../../licenses/services/licensesService'
-import { useCompanies } from '../../companies/hooks/useCompanies'
+import { createApiClient } from '../../../utils/apiHelpers'
+import { useAuth } from '../../../context/AuthContext'
 
-// Re-export useCompanies for convenience
-export { useCompanies }
+const ENDPOINTS = {
+  list: '/api/v1/licenses',
+  single: (id) => `/api/v1/licenses/${id}`,
+  create: '/api/v1/licenses',
+  update: (id) => `/api/v1/licenses/${id}`,
+  delete: (id) => `/api/v1/licenses/${id}`,
+}
 
-// Licenses hooks
-export const useLicenses = params =>
-  useQuery({
+export const useLicenses = (params = {}) => {
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+
+  return useQuery({
     queryKey: ['licenses', params],
-    queryFn: () => licensesService.getAll(params),
+    queryFn: () => apiClient.get(ENDPOINTS.list, params),
     keepPreviousData: true,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
   })
+}
 
-export const useLicense = id =>
-  useQuery({
+export const useLicense = (id) => {
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+
+  return useQuery({
     queryKey: ['license', id],
-    queryFn: () => licensesService.getById(id),
+    queryFn: () => apiClient.get(ENDPOINTS.single(id)),
     enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
   })
+}
 
 export const useCreateLicense = () => {
-  const qc = useQueryClient()
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: licensesService.create,
-    onSuccess: () => qc.invalidateQueries(['licenses']),
-  })
-}
-
-export const useUpdateLicense = () => {
-  const qc = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({ id, data }) => licensesService.update(id, data),
-    onSuccess: () => qc.invalidateQueries(['licenses']),
-  })
-}
-
-export const useDeleteLicense = () => {
-  const qc = useQueryClient()
-
-  return useMutation({
-    mutationFn: licensesService.delete,
-    onSuccess: () => qc.invalidateQueries(['licenses']),
-  })
-}
-
-// Superadmin specific hooks
-export const useSystemStats = () =>
-  useQuery({
-    queryKey: ['systemStats'],
-    queryFn: () => superadminService.getSystemStats(),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    cacheTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false,
-    retry: 1,
-  })
-
-export const useAssignLicense = () => {
-  const qc = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({ companyId, licenseId }) => superadminService.assignLicense(companyId, licenseId),
+    mutationFn: (data) => apiClient.post(ENDPOINTS.create, data),
     onSuccess: () => {
-      qc.invalidateQueries(['companies'])
-      qc.invalidateQueries(['systemStats'])
+      queryClient.invalidateQueries({ queryKey: ['licenses'] })
     },
   })
 }
 
-export const useRevokeLicense = () => {
-  const qc = useQueryClient()
+export const useUpdateLicense = () => {
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (companyId) => superadminService.revokeLicense(companyId),
+    mutationFn: ({ id, payload }) => apiClient.put(ENDPOINTS.update(id), payload),
     onSuccess: () => {
-      qc.invalidateQueries(['companies'])
-      qc.invalidateQueries(['systemStats'])
+      queryClient.invalidateQueries({ queryKey: ['licenses'] })
+    },
+  })
+}
+
+export const useDeleteLicense = () => {
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id) => apiClient.delete(ENDPOINTS.delete(id)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['licenses'] })
     },
   })
 }

@@ -1,42 +1,80 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { billingService } from '../services/billingService'
+import { createApiClient } from '../../../utils/apiHelpers'
+import { useAuth } from '../../../context/AuthContext'
 
-export const useInvoices = params =>
-  useQuery({
+const ENDPOINTS = {
+  list: '/api/v1/billings',
+  single: (id) => `/api/v1/billings/${id}`,
+  create: '/api/v1/billings',
+  update: (id) => `/api/v1/billings/${id}`,
+  delete: (id) => `/api/v1/billings/${id}`,
+}
+
+export const useInvoices = (params = {}) => {
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+
+  return useQuery({
     queryKey: ['invoices', params],
-    queryFn: () => billingService.getAll(params),
+    queryFn: () => apiClient.get(ENDPOINTS.list, params),
+    keepPreviousData: true,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
   })
+}
 
-export const useInvoice = id =>
-  useQuery({
-    queryKey: ['invoice', id],
-    queryFn: () => billingService.getById(id),
+export const useInvoice = (id) => {
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+
+  return useQuery({
+    queryKey: ['invoices', id],
+    queryFn: () => apiClient.get(ENDPOINTS.single(id)),
     enabled: !!id,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
   })
+}
 
 export const useCreateInvoice = () => {
-  const qc = useQueryClient()
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: billingService.create,
-    onSuccess: () => qc.invalidateQueries(['invoices']),
+    mutationFn: (data) => apiClient.post(ENDPOINTS.create, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] })
+    },
   })
 }
 
 export const useUpdateInvoice = () => {
-  const qc = useQueryClient()
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, ...payload }) => billingService.update(id, payload),
-    onSuccess: () => qc.invalidateQueries(['invoices']),
+    mutationFn: ({ id, payload }) => apiClient.put(ENDPOINTS.update(id), payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] })
+    },
   })
 }
 
 export const useDeleteInvoice = () => {
-  const qc = useQueryClient()
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: id => billingService.delete(id),
-    onSuccess: () => qc.invalidateQueries(['invoices']),
+    mutationFn: (id) => apiClient.delete(ENDPOINTS.delete(id)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] })
+    },
   })
 }

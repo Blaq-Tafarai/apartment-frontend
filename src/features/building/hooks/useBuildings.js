@@ -1,51 +1,80 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { buildingService } from '../services/buildingService'
+import { createApiClient } from '../../../utils/apiHelpers'
+import { useAuth } from '../../../context/AuthContext'
 
-export const useBuildings = params =>
-  useQuery({
+const ENDPOINTS = {
+  list: '/api/v1/buildings',
+  single: (id) => `/api/v1/buildings/${id}`,
+  create: '/api/v1/buildings',
+  update: (id) => `/api/v1/buildings/${id}`,
+  delete: (id) => `/api/v1/buildings/${id}`,
+}
+
+export const useBuildings = (params = {}) => {
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+
+  return useQuery({
     queryKey: ['buildings', params],
-    queryFn: () => buildingService.getAll(params),
+    queryFn: () => apiClient.get(ENDPOINTS.list, params),
     keepPreviousData: true,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
   })
+}
 
-export const useBuilding = id =>
-  useQuery({
+export const useBuilding = (id) => {
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+
+  return useQuery({
     queryKey: ['building', id],
-    queryFn: () => buildingService.getById(id),
+    queryFn: () => apiClient.get(ENDPOINTS.single(id)),
     enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,
   })
+}
 
 export const useCreateBuilding = () => {
-  const qc = useQueryClient()
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: buildingService.create,
-    onSuccess: () => qc.invalidateQueries(['buildings']),
+    mutationFn: (data) => apiClient.post(ENDPOINTS.create, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['buildings'] })
+    },
   })
 }
 
 export const useUpdateBuilding = () => {
-  const qc = useQueryClient()
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, payload }) => buildingService.update(id, payload),
-    onSuccess: () => qc.invalidateQueries(['buildings']),
+    mutationFn: ({ id, payload }) => apiClient.put(ENDPOINTS.update(id), payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['buildings'] })
+    },
   })
 }
 
 export const useDeleteBuilding = () => {
-  const qc = useQueryClient()
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: buildingService.delete,
-    onSuccess: () => qc.invalidateQueries(['buildings']),
+    mutationFn: (id) => apiClient.delete(ENDPOINTS.delete(id)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['buildings'] })
+    },
   })
 }

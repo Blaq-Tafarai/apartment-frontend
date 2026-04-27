@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider, AuthProvider, useAuth } from './context';
 import { MainLayout, BlankLayout } from './layouts';
@@ -8,6 +8,10 @@ import { ToastProvider } from './components/ui/Toast';
 
 // Lazy load pages
 const LoginPage = lazy(() => import('./features/auth/pages/LoginPage'));
+const RegisterPage = lazy(() => import('./features/auth/pages/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('./features/auth/pages/ForgotPasswordPage'));
+const VerifyOtpPage = lazy(() => import('./features/auth/pages/VerifyOtpPage'));
+const ResetPasswordPage = lazy(() => import('./features/auth/pages/ResetPasswordPage'));
 const DashboardPage = lazy(() => import('./features/dashboard/pages/DashboardPage'));
 const ListApartments = lazy(() => import('./features/apartment/pages/ListApartments'));
 const ListBuildings = lazy(() => import('./features/building/pages/ListBuildings'));
@@ -30,17 +34,18 @@ const NotFoundPage = lazy(() => import('./features/notfound/NotFoundPage'));
 
 // Superadmin pages
 const SuperadminDashboard = lazy(() => import('./features/superadmin/pages/SuperadminDashboard'));
-const ListAllUsers = lazy(() => import('./features/superadmin/pages/ListAllUsers'));
-const ListSubscriptions = lazy(() => import('./features/superadmin/pages/ListSubscriptions'));
 const PlatformSettings = lazy(() => import('./features/superadmin/pages/PlatformSettings'));
 const ListSystemAuditLogs = lazy(() => import('./features/superadmin/pages/ListSystemAuditLogs'));
+const ListSubscriptions = lazy(() => import('./features/subscriptions/pages/ListSubscriptions'));
+const ListUsers = lazy(() => import('./features/users/pages/ListUsers'));
 
 // --------------------
 // Protected Route
 // --------------------
 const ProtectedRoute = ({ children, roles, permissions, requireAll = false }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user, accessToken } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -50,9 +55,14 @@ const ProtectedRoute = ({ children, roles, permissions, requireAll = false }) =>
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !accessToken()) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
+
+  // Check mustChangePassword
+  // if (user?.mustChangePassword !== true) {
+  //   return <Navigate to="/reset-password" replace />;
+  // }
 
   // If roles or permissions are specified, use RoleGuard
   if (roles || permissions) {
@@ -105,7 +115,12 @@ function App() {
                     {/* Blank Layout Routes (No sidebar/header) */}
                     <Route element={<BlankLayout />}>
                       <Route path="/login" element={<LoginPage />} />
+                      <Route path="/register" element={<RegisterPage />} />
+                      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                      <Route path="/verify-otp" element={<VerifyOtpPage />} />
+                      <Route path="/reset-password" element={<ResetPasswordPage />} />
                       <Route path="*" element={<NotFoundPage />} />
+
                     </Route>
 
                     {/* Protected Routes */}
@@ -241,7 +256,7 @@ function App() {
                           path="users"
                           element={
                             <ProtectedRoute roles={['superadmin']}>
-                              <ListAllUsers />
+                              <ListUsers />
 
                             </ProtectedRoute>
                           }

@@ -2,8 +2,8 @@ import React from 'react';
 
 const ApartmentSummaryCards = ({ apartments }) => {
   const totalApartments = apartments.length;
-  const occupiedCount = apartments.filter(a => a.status === 'Occupied').length;
-  const vacantCount = apartments.filter(a => a.status === 'Vacant').length;
+  const occupiedCount = apartments.filter(a => a.status === 'occupied').length;
+  const vacantCount = apartments.filter(a => a.status === 'available').length;
   const avgRent = totalApartments > 0
     ? Math.round(apartments.reduce((sum, a) => sum + a.rent, 0) / totalApartments)
     : 0;
@@ -30,7 +30,7 @@ const ApartmentSummaryCards = ({ apartments }) => {
       </div>
       <div className="card">
         <p className="text-text-secondary text-sm mb-1">Avg Rent</p>
-        <p className="text-3xl font-bold text-text-primary">
+        <p className="text-2xl font-bold text-text-primary">
           ${avgRent}/month
         </p>
       </div>

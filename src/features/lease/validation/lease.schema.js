@@ -1,31 +1,55 @@
 import { z } from 'zod';
 
 export const leaseSchema = z.object({
-  tenantId: z.string().min(1, 'Tenant is required'),
-  apartmentId: z.string().min(1, 'Apartment is required'),
-  buildingId: z.string().min(1, 'Building is required'),
-  startDate: z.date({
-    required_error: 'Start date is required',
-    invalid_type_error: 'Start date must be a valid date',
+  tenantId: z
+  .string()
+  .optional()
+  .refine((val) => !!val, {
+    message: 'Select a tenant',
   }),
-  endDate: z.date({
-    required_error: 'End date is required',
-    invalid_type_error: 'End date must be a valid date',
+
+  apartmentId: z
+  .string()
+  .optional()
+  .refine((val) => !!val, {
+    message: 'Select an apartment',
   }),
-  monthlyRent: z.number()
-    .min(1, 'Monthly rent must be greater than 0')
-    .max(100000, 'Monthly rent must be less than $100,000'),
-  securityDeposit: z.number()
-    .min(0, 'Security deposit cannot be negative')
-    .max(50000, 'Security deposit must be less than $50,000'),
+
+
+  startDate: z.coerce.date({
+    required_error: "Start date is required",
+  }).optional(),
+
+  endDate: z.coerce.date({
+    required_error: "End date is required",
+  }).optional(),
+
+  rentAmount: z.string()
+    .optional()
+    .refine((val) => !!val, {
+      message: 'Monthly rent is required',
+    })
+    .refine((val) => /^\d+(\.\d{1,2})?$/.test(val || ''), {
+      message: 'Monthly rent must be a valid number with up to 2 decimal places',
+    }),
+
+  securityDeposit: z.string()
+    .optional()
+    .refine((val) => !!val, {
+      message: 'Security deposit is required',
+    })
+    .refine((val) => /^\d+(\.\d{1,2})?$/.test(val || ''), {
+      message: 'Security deposit must be a valid number with up to 2 decimal places',
+    }).optional(),
+
   terms: z.string()
     .min(10, 'Terms must be at least 10 characters')
-    .max(5000, 'Terms must be less than 5000 characters'),
-  signatureDate: z.date().optional(),
-  signedByTenant: z.boolean().default(false),
-  signedByLandlord: z.boolean().default(false),
-  landlordId: z.string().optional(),
-}).refine((data) => data.endDate > data.startDate, {
+    .max(5000, 'Terms must be less than 5000 characters').optional(),
+
+}).refine((data) => {
+  if (!data.startDate || !data.endDate) return true;
+  return data.endDate > data.startDate;
+}, {
   message: 'End date must be after start date',
   path: ['endDate'],
 });

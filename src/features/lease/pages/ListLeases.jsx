@@ -15,6 +15,7 @@ import { useCreateLease, useUpdateLease, useDeleteLease } from '../hooks/useLeas
 import Badge from '../../../components/ui/Badge';
 import Tooltip from '../../../components/ui/Tooltip'
 
+
 const ListLeases = () => {
   const toast = useToast();
   const [searchTerm, setSearchTerm] = useState('');
@@ -72,7 +73,7 @@ const ListLeases = () => {
         await createLease(formData);
         toast.success('Lease created successfully');
       } else if (modalMode === 'edit' && currentLease) {
-        await updateLease({ id: currentLease.id, ...formData });
+        await updateLease({ id: currentLease.id, payload: formData });
         toast.success('Lease updated successfully');
       } else {
         toast.error('An error occurred. Please try again.');
@@ -95,57 +96,35 @@ const ListLeases = () => {
     }
   };
 
-  const depositStatus = (depositPaid) => {
-    return depositPaid ? 'success' : 'danger';
-  }
-
-  const signStatus = (signedByTenant) => {
-    return signedByTenant ? 'success' : 'warning';
-  }
-
-  const landStatus = (signedByLandlord) => {
-    return signedByLandlord ? 'success' : 'warning';
-  }
-
-
+  const statusColors = (status) => {
+    switch (status) {
+      case 'active':
+        return 'success';
+      case 'inactive':
+        return 'danger';
+      default:
+        return 'default';
+    }
+  };
   // Columns definition
   const columns = [
-    { header: 'Tenant', accessor: 'tenant', render: row => row.tenant?.name || 'N/A' },
+    { header: 'Tenant', accessor: 'tenant', render: row => row.tenant?.user?.name || 'N/A' },
     { header: 'Apartment', accessor: 'apartment', render: row => row.apartment?.unitNumber || 'N/A' },
-    { header: 'Building', accessor: 'building', render: row => row.building?.name || 'N/A' },
-    { header: 'Monthly Rent', accessor: 'monthlyRent', render: row => `$${row.monthlyRent}` },
+    { header: 'Monthly Rent', accessor: 'rentAmount', render: row => `$${row.rentAmount}` },
     { header: 'Security Deposit', accessor: 'securityDeposit', render: row => `$${row.securityDeposit}` },
     {
       header: 'Deposit Paid',
-      accessor: 'depositPaid',
+      accessor: 'status',
       render: (row) => (
         <>
-          <Badge color={depositStatus(row.depositPaid)} variant="soft" dot>
-            {row.depositPaid ? 'Paid' : 'Unpaid'}
+          <Badge color={statusColors(row.status)} variant="soft" dot>
+            {row.status}
           </Badge>
         </>
       ),
     },
     { header: 'Start Date', accessor: 'startDate', render: row => new Date(row.startDate).toLocaleDateString() },
     { header: 'End Date', accessor: 'endDate', render: row => new Date(row.endDate).toLocaleDateString() },
-    {
-      header: 'Tenant Signed',
-      accessor: 'signedByTenant',
-      render: (row) => (
-        <Badge color={signStatus(row.signedByTenant)} variant='soft' dot>
-          {row.signedByTenant ? 'Signed' : 'Pending'}
-        </Badge>
-      ),
-    },
-    {
-      header: 'Landlord Signed',
-      accessor: 'signedByLandlord',
-      render: (row) => (
-        <Badge color={landStatus(row.signedByLandlord)} variant='soft' dot>
-          {row.signedByLandlord ? 'Signed' : 'Pending'}
-        </Badge>
-      ),
-    },
     {
       header: 'Actions',
       render: row => (
@@ -215,8 +194,10 @@ const ListLeases = () => {
           data={leases}
           pagination={{
             currentPage: page,
-            totalPages: data?.totalPages || 1,
-            onPageChange: setPage,
+            totalPages: data?.meta?.totalPages || 1,
+            totalItems: data?.meta?.total || 0,
+            itemsPerPage: limit,
+            onPageChange: setPage
           }}
         />
 
@@ -224,7 +205,9 @@ const ListLeases = () => {
         <div className="mt-4 flex justify-end">
           <Pagination
             currentPage={page}
-            totalPages={data?.totalPages || 1}
+            totalPages={data?.meta?.totalPages || 1}
+            totalItems={data?.meta?.total || 0}
+            itemsPerPage={limit}
             onPageChange={setPage}
           />
         </div>
@@ -241,7 +224,7 @@ const ListLeases = () => {
             <Button variant="ghost" onClick={() => setIsFormModalOpen(false)}>
               Cancel
             </Button>
-            <Button form='lease-form' type='submit' variant="primary" onClick={handleSubmitForm}>
+            <Button form='lease-form' type='submit' variant="primary">
               {modalMode === 'add' ? 'Create Lease' : 'Update Lease'}
             </Button>
           </>
@@ -261,7 +244,9 @@ const ListLeases = () => {
         title="Lease Details"
         size='3xl'
       >
-        <LeaseDetailsView lease={currentLease} />
+        <LeaseDetailsView lease={currentLease}
+          statusColors={statusColors}
+        />
       </Modal>
 
       {/* Delete Confirmation Modal */}

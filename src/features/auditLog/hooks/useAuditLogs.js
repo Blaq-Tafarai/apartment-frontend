@@ -1,45 +1,39 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { auditLogService } from '../services/auditLogService'
+import { createApiClient } from '../../../utils/apiHelpers'
+import { useAuth } from '../../../context/AuthContext'
 
-export const useAuditLogs = params =>
-  useQuery({
-    queryKey: ['auditLogs', params],
-    queryFn: () => auditLogService.getAll(params),
+const ENDPOINTS = {
+  list: '/api/v1/audit-logs',
+  single: (id) => `/api/v1/audit-logs/${id}`,
+}
+
+export const useAuditLogs = (params = {}) => {
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+
+  return useQuery({
+    queryKey: ['audit-logs', params],
+    queryFn: () => apiClient.get(ENDPOINTS.list, params),
+    keepPreviousData: true,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
   })
+}
 
-export const useAuditLog = id =>
-  useQuery({
-    queryKey: ['auditLog', id],
-    queryFn: () => auditLogService.getById(id),
+export const useAuditLog = (id) => {
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+
+  return useQuery({
+    queryKey: ['audit-logs', id],
+    queryFn: () => apiClient.get(ENDPOINTS.single(id)),
     enabled: !!id,
-  })
-
-export const useCreateAuditLog = () => {
-  const qc = useQueryClient()
-
-  return useMutation({
-    mutationFn: auditLogService.create,
-    onSuccess: () => qc.invalidateQueries(['auditLogs']),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
   })
 }
 
-export const useUpdateAuditLog = () => {
-  const qc = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({ id, data }) => auditLogService.update(id, data),
-    onSuccess: () => qc.invalidateQueries(['auditLogs']),
-  })
-}
-
-export const useDeleteAuditLog = () => {
-  const qc = useQueryClient()
-
-  return useMutation({
-    mutationFn: id => auditLogService.delete(id),
-    onSuccess: () => {
-      qc.invalidateQueries(['auditLogs'])
-      qc.invalidateQueries(['auditLog', id])
-},
-  })
-}

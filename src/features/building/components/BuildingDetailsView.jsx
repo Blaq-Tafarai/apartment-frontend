@@ -49,6 +49,12 @@ const BuildingDetailsView = ({ building, getStatusColor }) => {
                 {building.totalSqft ? `${building.totalSqft.toLocaleString()} sqft` : 'N/A'}
               </span>
             </div>
+            <div className="flex justify-between items-center py-2 border-b border-color">
+              <span className="text-secondary font-medium">No. of Apartments:</span>
+              <span className="text-primary">
+                {building._count?.apartments || 0}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -67,7 +73,7 @@ const BuildingDetailsView = ({ building, getStatusColor }) => {
             <div className="flex justify-between items-center py-2 border-b border-color">
               <span className="text-secondary font-medium">Manager:</span>
               <span className="text-primary">
-                {building.manager ? building.manager.name : 'N/A'}
+                {building.managers[0]?.manager?.name || 'N/A'}
               </span>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import Badge from '../../../components/ui/Badge';
 
-const ApartmentDetailsView = ({ apartment, statusColors }) => {
+const ApartmentDetailsView = ({ apartment, getStatusColor }) => {
   if (!apartment) return null;
 
   return (
@@ -11,14 +11,14 @@ const ApartmentDetailsView = ({ apartment, statusColors }) => {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-xl font-semibold text-primary">
-              {apartment.unit}
+              {apartment.unitNumber}
             </h3>
             <p className="text-secondary">
               {apartment.building?.name || 'N/A'}
             </p>
           </div>
           <Badge
-            color={statusColors(apartment.status.toLowerCase())}
+            color={getStatusColor(apartment.status.toLowerCase())}
             variant="soft"
             className="text-sm px-3 py-1"
           >
@@ -66,12 +66,6 @@ const ApartmentDetailsView = ({ apartment, statusColors }) => {
                 ${apartment.rent}/month
               </span>
             </div>
-            <div className="flex justify-between items-center py-2 border-b border-color">
-              <span className="text-secondary font-medium">Tenant:</span>
-              <span className="text-primary">
-                {apartment.tenant?.name || 'Vacant'}
-              </span>
-            </div>
           </div>
         </div>
       </div>
@@ -87,7 +81,7 @@ const ApartmentDetailsView = ({ apartment, statusColors }) => {
               <Badge
                 key={index}
                 color="primary"
-                variant="outline"
+                variant="solid"
                 className="text-sm"
               >
                 {amenity}

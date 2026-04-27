@@ -1,42 +1,80 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { leaseService } from '../services/leaseService'
+import { createApiClient } from '../../../utils/apiHelpers'
+import { useAuth } from '../../../context/AuthContext'
 
-export const useLeases = params =>
-  useQuery({
+const ENDPOINTS = {
+  list: '/api/v1/leases',
+  single: (id) => `/api/v1/leases/${id}`,
+  create: '/api/v1/leases',
+  update: (id) => `/api/v1/leases/${id}`,
+  delete: (id) => `/api/v1/leases/${id}`,
+}
+
+export const useLeases = (params = {}) => {
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+
+  return useQuery({
     queryKey: ['leases', params],
-    queryFn: () => leaseService.getAll(params),
+    queryFn: () => apiClient.get(ENDPOINTS.list, params),
+    keepPreviousData: true,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
   })
+}
 
-export const useLease = id =>
-  useQuery({
-    queryKey: ['lease', id],
-    queryFn: () => leaseService.getById(id),
+export const useLease = (id) => {
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+
+  return useQuery({
+    queryKey: ['leases', id],
+    queryFn: () => apiClient.get(ENDPOINTS.single(id)),
     enabled: !!id,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    retry: 1,
   })
+}
 
 export const useCreateLease = () => {
-  const qc = useQueryClient()
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: leaseService.create,
-    onSuccess: () => qc.invalidateQueries(['leases']),
+    mutationFn: (data) => apiClient.post(ENDPOINTS.create, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leases'] })
+    },
   })
 }
 
 export const useUpdateLease = () => {
-  const qc = useQueryClient()
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, ...payload }) => leaseService.update(id, payload),
-    onSuccess: () => qc.invalidateQueries(['leases']),
+    mutationFn: ({ id, payload }) => apiClient.put(ENDPOINTS.update(id), payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leases'] })
+    },
   })
 }
 
 export const useDeleteLease = () => {
-  const qc = useQueryClient()
+  const { accessToken: getAccessToken } = useAuth()
+  const apiClient = createApiClient(getAccessToken)
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: leaseService.delete,
-    onSuccess: () => qc.invalidateQueries(['leases']),
+    mutationFn: (id) => apiClient.delete(ENDPOINTS.delete(id)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leases'] })
+    },
   })
 }

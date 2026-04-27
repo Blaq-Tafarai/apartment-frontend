@@ -1,0 +1,32 @@
+# Render deployment configuration for Apartment Management Frontend
+# This file defines how your React + Vite app should be built and deployed on Render
+
+services:
+  # Static Site Service (Frontend)
+  - type: web
+    name: apartment-management-frontend
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    # SPA routing fallback - serve index.html for all routes
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    # Environment variables for production
+    envVars:
+      - key: VITE_API_URL
+        value: https://apartment-backend-trkh.onrender.com
+        # Replace 'your-backend-name' with your actual Render backend service name
+        # Or use sync to reference another service:
+        # sync: false
+      - key: NODE_VERSION
+        value: 18.17.0
+      - key: NPM_CONFIG_LEGACY_PEER_DEPS
+        value: "true"
+
+# Optional: Define a preview environment for pull requests
+previewEnvironment:
+  envVars:
+    - key: VITE_API_URL
+      value: https://apartment-backend-trkh.onrender.com

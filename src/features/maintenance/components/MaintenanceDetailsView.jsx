@@ -1,8 +1,13 @@
 import React from 'react';
 import Badge from '../../../components/ui/Badge';
 
-const MaintenanceDetailsView = ({ maintenance, priorityColors, getStatus, statusColors }) => {
+const MaintenanceDetailsView = ({ maintenance, priorityColors, getStatusColor }) => {
   if (!maintenance) return null;
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString();
+  };
 
   return (
     <div className="space-y-6">
@@ -14,7 +19,7 @@ const MaintenanceDetailsView = ({ maintenance, priorityColors, getStatus, status
               {maintenance.issue}
             </h3>
             <p className="text-secondary">
-              {maintenance.tenant?.name || 'N/A'} - {maintenance.apartment?.number || 'N/A'} - {maintenance.building?.name || 'N/A'}
+              {maintenance.tenant?.user?.name || 'N/A'} - {maintenance.apartment?.unitNumber || 'N/A'}
             </p>
           </div>
           <div className="flex gap-2">
@@ -26,11 +31,11 @@ const MaintenanceDetailsView = ({ maintenance, priorityColors, getStatus, status
               {maintenance.priority}
             </Badge>
             <Badge
-              color={statusColors(maintenance.status)}
+              color={getStatusColor(maintenance.status)}
               variant="soft"
               className="text-sm px-3 py-1"
             >
-              {getStatus(maintenance.status)}
+              {maintenance.status}
             </Badge>
           </div>
         </div>
@@ -61,43 +66,37 @@ const MaintenanceDetailsView = ({ maintenance, priorityColors, getStatus, status
             <div className="flex justify-between items-center py-2 border-b border-color">
               <span className="text-secondary font-medium">Status:</span>
               <Badge
-                color={statusColors(maintenance.status)}
+                color={getStatusColor(maintenance.status)}
                 variant="soft"
                 className="text-sm"
               >
-                {getStatus(maintenance.status)}
+                {maintenance.status}
               </Badge>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-color">
               <span className="text-secondary font-medium">Assigned To:</span>
-              <span className="text-primary">{maintenance.assignedTo || 'Unassigned'}</span>
+              <span className="text-primary">{maintenance.assignedManager?.name || 'Unassigned'}</span>
             </div>
           </div>
         </div>
 
-        {/* Cost Information */}
+        {/* Estimated Cost, Actual Cost, Completed At */}
         <div className="space-y-4">
           <h4 className="text-lg font-medium text-primary border-b border-color pb-2">
-            Cost Information
+            Financial & Timeline Information
           </h4>
           <div className="space-y-3">
             <div className="flex justify-between items-center py-2 border-b border-color">
               <span className="text-secondary font-medium">Estimated Cost:</span>
-              <span className="text-primary">
-                {maintenance.estimatedCost ? `$${maintenance.estimatedCost}` : 'N/A'}
-              </span>
+              <span className="text-primary">${maintenance.estimatedCost || 'N/A'}</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-color">
               <span className="text-secondary font-medium">Actual Cost:</span>
-              <span className="text-primary">
-                {maintenance.actualCost ? `$${maintenance.actualCost}` : 'N/A'}
-              </span>
+              <span className="text-primary">${maintenance.actualCost || 'N/A'}</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-color">
               <span className="text-secondary font-medium">Completed At:</span>
-              <span className="text-primary">
-                {maintenance.completedAt ? new Date(maintenance.completedAt).toLocaleDateString() : 'N/A'}
-              </span>
+              <span className="text-primary">{formatDate(maintenance.completedAt) || 'N/A'}</span>
             </div>
           </div>
         </div>
@@ -109,18 +108,14 @@ const MaintenanceDetailsView = ({ maintenance, priorityColors, getStatus, status
           Location Information
         </h4>
         <div className="bg-surface p-4 rounded-lg">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <span className="text-secondary font-medium">Tenant:</span>
-              <p className="text-primary">{maintenance.tenant?.name || 'N/A'}</p>
-            </div>
-            <div>
-              <span className="text-secondary font-medium">Building:</span>
-              <p className="text-primary">{maintenance.building?.name || 'N/A'}</p>
+              <p className="text-primary">{maintenance.tenant?.user?.name || 'N/A'}</p>
             </div>
             <div>
               <span className="text-secondary font-medium">Apartment:</span>
-              <p className="text-primary">{maintenance.apartment?.number || 'N/A'}</p>
+              <p className="text-primary">{maintenance.apartment?.unitNumber || 'N/A'}</p>
             </div>
           </div>
         </div>
@@ -139,38 +134,14 @@ const MaintenanceDetailsView = ({ maintenance, priorityColors, getStatus, status
       </div>
 
       {/* Notes Section */}
-      {maintenance.notes && (
-        <div className="space-y-3">
-          <h4 className="text-lg font-medium text-primary border-b border-color pb-2">
-            Notes
-          </h4>
-          <div className="bg-surface p-4 rounded-lg">
-            <p className="text-secondary leading-relaxed">
-              {maintenance.notes}
-            </p>
-          </div>
+      <div className="space-y-3">
+        <h4 className="text-lg font-medium text-primary border-b border-color pb-2">
+          Notes
+        </h4>
+        <div className="bg-surface p-4 rounded-lg">
+          <p className="text-secondary leading-relaxed">{maintenance.note}</p>
         </div>
-      )}
-
-      {/* Photos Section */}
-      {maintenance.photos && maintenance.photos.length > 0 && (
-        <div className="space-y-3">
-          <h4 className="text-lg font-medium text-primary border-b border-color pb-2">
-            Photos ({maintenance.photos.length})
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {maintenance.photos.map((photo, index) => (
-              <div key={index} className="bg-surface p-2 rounded-lg border border-color">
-                <img
-                  src={photo}
-                  alt={`Maintenance photo ${index + 1}`}
-                  className="w-full h-32 object-cover rounded"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };

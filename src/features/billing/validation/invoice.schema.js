@@ -1,33 +1,51 @@
 import { z } from 'zod';
 
 export const invoiceSchema = z.object({
-  tenantId: z.string().min(1, 'Tenant is required'),
-  buildingId: z.string().min(1, 'Building is required'),
-  apartmentId: z.string().min(1, 'Apartment is required'),
-  invoiceNumber: z.string()
-    .min(1, 'Invoice number is required')
-    .max(50, 'Invoice number cannot exceed 50 characters'),
-  amount: z.number()
-    .min(0.01, 'Amount must be greater than 0')
-    .max(100000, 'Amount must be less than $100,000'),
-  dueDate: z.date({
-    required_error: 'Due date is required',
-    invalid_type_error: 'Due date must be a valid date',
+  tenantId: z
+  .string()
+  .optional()
+  .refine((val) => !!val, {
+    message: 'Select a tenant',
   }),
-  issueDate: z.date({
-    required_error: 'Issue date is required',
-    invalid_type_error: 'Issue date must be a valid date',
+
+  leaseId: z
+  .string()
+  .optional()
+  .refine((val) => !!val, {
+    message: 'Select a lease',
   }),
-  status: z.enum(['Pending', 'Paid', 'Overdue', 'Cancelled'], {
-    errorMap: () => ({ message: 'Please select a valid status' })
-  }).default('Pending'),
+
+  amount: z.string()
+  .optional()
+  .refine((val) => !!val, {
+    message: 'Amount is required',
+  })
+  .refine((val) => /^\d+(\.\d{1,2})?$/.test(val || ''), {
+    message: 'Amount must be a valid number with up to 2 decimal places',
+  }),
+
+  issueDate: z.coerce.date({
+    required_error: "Issue date is required",
+  }).optional(),
+
+  dueDate: z.coerce.date({
+    required_error: "Due date is required",
+  }).optional(),
+
+  paidAt: z.coerce.date({
+    required_error: "Paid date is required",
+  }).optional(),
+
+  status: z.string()
+  .optional()
+  .refine((val) => !!val, {
+    message: 'Status is required',
+  })
+  .refine((val) => ['pending', 'paid', 'overdue', 'cancelled'].includes(val || ''), {
+    message: 'Status must be one of: pending, paid, overdue, cancelled',  
+  }),
+
   description: z.string()
-    .min(1, 'Description is required')
-    .max(500, 'Description cannot exceed 500 characters'),
-  notes: z.string()
-    .max(1000, 'Notes cannot exceed 1000 characters')
-    .optional(),
-}).refine((data) => data.dueDate >= data.issueDate, {
-  message: 'Due date cannot be before issue date',
-  path: ['dueDate'],
+  .max(5000, 'Description must be less than 5000 characters')
+  .optional(),
 });
